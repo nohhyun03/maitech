@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>관리자 대시보드 - 관리자 현황 확인 | MAITECH</title>
+<link rel="stylesheet" href="../css/common.css">
+<link rel="stylesheet" href="../css/layout.css">
+<link rel="stylesheet" href="../css/admin-dashboard.css">
+</head>
+<body></body>
+<script src="../js/shell.js"></script>
+<script>
+renderAppShell({
+  active: 'status',
+  role: 'manager',
+  mainHtml: `
+    <div class="section-title">
+      관리자 현황 확인
+      <span class="updated-at" id="updatedAt">마지막 업데이트: 2분전</span>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card"><span class="badge">전체</span><div class="value">927</div></div>
+      <div class="stat-card"><span class="badge">미확인</span><div class="value">7</div></div>
+      <div class="stat-card"><span class="badge">진행 중</span><div class="value">32</div></div>
+      <div class="stat-card"><span class="badge">24h 감지</span><div class="value">56</div></div>
+    </div>
+
+    <div class="section-title">최근 공정 이상 알림 및 공정 데이터 관리</div>
+    <div class="two-col">
+      <div class="panel">
+        <span class="panel-label">최근 공정 이상 알림</span>
+        <div class="alert-list" id="alertList"></div>
+      </div>
+      <div class="right-col">
+        <div class="panel">
+          <span class="panel-label">이상별 조치 기록 및 확인 상태</span>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>공정명</th>
+                <th>이상유형</th>
+                <th>조치 내용</th>
+                <th>관리자 확인</th>
+              </tr>
+            </thead>
+            <tbody id="recordTableBody"></tbody>
+          </table>
+        </div>
+        <div class="panel">
+          <span class="panel-label">변수 요소 관리</span>
+          <div class="variable-list" id="variableList"></div>
+        </div>
+      </div>
+    </div>
+  `,
+});
+</script>
+<script src="../js/admin-dashboard.js"></script>
+</html>

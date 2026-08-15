@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>조치 기록 작성 및 담당자 서명 | MAITECH</title>
+<link rel="stylesheet" href="../css/common.css">
+<link rel="stylesheet" href="../css/layout.css">
+<link rel="stylesheet" href="../css/action-record.css">
+</head>
+<body></body>
+<script src="../js/shell.js"></script>
+<script>
+renderAppShell({
+  active: 'detail',
+  role: 'worker',
+  mainHtml: `
+    <div class="breadcrumb">
+      <a class="breadcrumb-back" href="javascript:history.back()">&larr; 페이지 되돌아가기</a>
+    </div>
+    <div class="page-heading">패턴 지속 시 예상 품질 영향</div>
+    <div class="page-subheading">이상 알림 &gt; 상세 보기 &gt; 조치 기록 작성 및 담당자 서명</div>
+
+    <div class="panel">
+      <span class="panel-label">연결된 공정 이상 정보</span>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">공정명</div>
+          <div class="info-value">압면 공정 3호기</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">이상 감지 시점</div>
+          <div class="info-value">2026.08.15 14:20:17</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">심각도</div>
+          <div class="info-value">높음 (High)</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">이상 유형</div>
+          <div class="info-value">패턴 이탈 - 온도 급변</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">이상 건 ID</div>
+          <div class="info-value">LHJ-20260815-0022</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">조치 수행 시각</div>
+          <div class="info-value">2026.08.15 15:12:58</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">현재 상태</div>
+          <div class="info-value">대응 진행 중</div>
+        </div>
+        <div class="info-item"></div>
+      </div>
+    </div>
+
+    <div class="section-title">조치 내용 / 조치 결과 및 현재 공정 상태</div>
+    <div class="form-label">수행 조치 내용</div>
+    <textarea class="form-textarea" id="actionContent" placeholder="수행 조치에 따른 자동 입력"></textarea>
+
+    <div class="section-title">특이 사항 및 추가 관찰 내용</div>
+    <div class="form-label">특이사항 및 추가 관찰 내용</div>
+    <textarea class="form-textarea" id="extraNotes" placeholder="현장 작업자가 직접 입력"></textarea>
+
+    <div class="section-title">담당자 서명 및 관리자 알림 전송 확인</div>
+    <div class="panel signature-panel">
+      <span class="panel-label">발신 및 수신 대상 확인</span>
+      <div class="signature-row">
+        <select class="form-select" id="senderSelect">
+          <option>생산 관리자 강성윤</option>
+        </select>
+        <select class="form-select" id="receiverSelect">
+          <option>현장 작업자 탁강헌</option>
+        </select>
+      </div>
+
+      <div class="preview-label">전송 내용 미리보기</div>
+      <div class="preview-text">[LHJ-20260815-0022] 압면 공정 3호기 이상 대응 조치 기록이 등록되었습니다. 조치 내용과 결과가 포함되며, 관리자는 이상 상세 화면에서 전체 기록을 확인할 수 있습니다.</div>
+
+      <div class="consent-row">
+        <input type="checkbox" id="consentCheckbox">
+        <label for="consentCheckbox">알림 전송에 동의합니다</label>
+      </div>
+
+      <div class="signature-footer">
+        <div class="signature-note">위 내용을 확인한 후 전송 버튼을 눌러주십시오. 전송 후에는 내용을 수정할 수 없습니다.</div>
+        <button class="submit-btn" id="submitBtn" disabled>조치 기록 저장 및 관리자 알림 전송</button>
+      </div>
+    </div>
+  `,
+});
+</script>
+<script src="../js/action-record.js"></script>
+</html>

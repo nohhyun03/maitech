@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>패턴 지속 시 예상 품질 영향 | MAITECH</title>
+<link rel="stylesheet" href="../css/common.css">
+<link rel="stylesheet" href="../css/layout.css">
+<link rel="stylesheet" href="../css/dashboard-simulation.css">
+</head>
+<body></body>
+<script src="../js/shell.js"></script>
+<script>
+renderAppShell({
+  active: 'detail',
+  role: 'worker',
+  mainHtml: `
+    <div class="breadcrumb">
+      <a class="breadcrumb-back" href="javascript:history.back()">← 페이지 되돌아가기</a>
+    </div>
+    <div class="page-title-row">
+      <div>
+        <div class="page-heading">패턴 지속 시 예상 품질 영향</div>
+        <div class="page-subheading">
+          <span>이상 알림 &gt; 상세 보기</span>
+          <span>신뢰 수준: 중간 (72%) · 분석 기준 데이터: 2026. 08.15 13:22 기준</span>
+        </div>
+      </div>
+      <a class="icon-badge" href="action-record.html" aria-label="조치 기록 작성으로 이동">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8l-5-5Z" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M14 3v5h5" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M9 14h6M9 17h6" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </a>
+    </div>
+
+    <div class="stat-grid impact-grid" id="impactGrid"></div>
+
+    <div class="section-title">조건 시뮬레이션 및 권장 후속 조치</div>
+    <div class="two-col">
+      <div class="panel">
+        <span class="panel-label">시뮬레이션 조건</span>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>조정변수</th>
+              <th>현재값</th>
+              <th>권장값</th>
+              <th>예상효과</th>
+            </tr>
+          </thead>
+          <tbody id="simTableBody"></tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <span class="panel-label">권장 후속 처리 방법</span>
+        <div id="actionList"></div>
+      </div>
+    </div>
+  `,
+});
+</script>
+<script src="../js/dashboard-simulation.js"></script>
+</html>

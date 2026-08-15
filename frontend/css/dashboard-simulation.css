@@ -1,0 +1,67 @@
+#mainContent {
+  padding-top: 20px;
+  padding-left: 40px;
+  padding-right: 60px;
+}
+
+.page-title-row {
+  margin-bottom: 20px;
+}
+
+.page-title-row .page-heading {
+  margin-bottom: 2px;
+}
+
+.page-subheading {
+  display: flex;
+  align-items: baseline;
+  gap: 40px;
+}
+
+.impact-grid {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  margin-bottom: 8px;
+}
+
+.impact-card {
+  min-height: auto;
+  padding: 13px 18px 15px;
+}
+
+.impact-card .badge {
+  margin-bottom: 13px;
+}
+
+.impact-card .impact-desc {
+  font-size: 14px;
+  line-height: 1.2;
+  color: #333;
+}
+
+.two-col {
+  grid-template-columns: 1fr 1fr;
+  gap: 35px;
+}
+
+.two-col .panel {
+  padding: 20px;
+}
+
+.data-table th {
+  padding: 28px 16px 28px 32px;
+}
+
+.data-table td {
+  padding: 19px 16px 19px 32px;
+}
+
+.cause-item {
+  min-height: 180px;
+  margin-bottom: 26px;
+}
+
+.impact-grid + .section-title {
+  margin-top: 24px;
+  margin-bottom: 16px;
+}

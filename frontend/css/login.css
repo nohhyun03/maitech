@@ -1,0 +1,114 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-card {
+  position: relative;
+  width: 501px;
+  height: 537px;
+}
+
+.login-logo {
+  position: absolute;
+  left: 210px;
+  top: 0;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.login-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.login-title {
+  position: absolute;
+  left: 110px;
+  top: 80px;
+  width: 279px;
+  height: 124px;
+  font-family: var(--font-title);
+  font-size: 48px;
+  text-align: center;
+}
+
+.login-field {
+  position: absolute;
+  left: 0;
+  width: 500px;
+}
+
+.login-field--id {
+  top: 218px;
+  height: 82px;
+}
+
+.login-field--password {
+  top: 314px;
+  height: 84px;
+}
+
+.login-field label {
+  display: block;
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
+.login-field input {
+  width: 100%;
+  height: 50px;
+  padding: 0 16px;
+  font-size: 18px;
+  font-family: inherit;
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}
+
+.login-remember {
+  position: absolute;
+  left: 0;
+  top: 412px;
+  width: max-content;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 20px;
+  white-space: nowrap;
+}
+
+.login-remember input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  accent-color: var(--color-checkbox);
+}
+
+.login-forgot {
+  position: absolute;
+  left: 341px;
+  top: 412px;
+  width: 160px;
+  height: 24px;
+  font-size: 20px;
+  color: var(--color-muted);
+}
+
+.login-submit {
+  position: absolute;
+  left: 0;
+  top: 487px;
+  width: 500px;
+  height: 50px;
+  border-radius: 10px;
+  background: var(--color-dark);
+  color: #fff;
+  font-size: 24px;
+}

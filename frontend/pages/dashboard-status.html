@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>실시간 공정 상태 현황 | MAITECH</title>
+<link rel="stylesheet" href="../css/common.css">
+<link rel="stylesheet" href="../css/layout.css">
+<link rel="stylesheet" href="../css/dashboard-status.css">
+</head>
+<body></body>
+<script src="../js/shell.js"></script>
+<script>
+renderAppShell({
+  active: 'status',
+  role: 'worker',
+  mainHtml: `
+    <div class="section-title">
+      실시간 공정 상태 현황
+      <span class="updated-at" id="updatedAt">마지막 업데이트: 2분전</span>
+    </div>
+    <div class="stat-grid" id="statGrid">
+      <div class="stat-card"><span class="badge">전체</span><div class="value" id="statTotal">12</div></div>
+      <div class="stat-card"><span class="badge">긴급</span><div class="value" id="statUrgent">3</div></div>
+      <div class="stat-card"><span class="badge">경고</span><div class="value" id="statWarning">6</div></div>
+      <div class="stat-card"><span class="badge">해결</span><div class="value" id="statResolved">3</div></div>
+    </div>
+
+    <div class="section-title">공정 이상 알림 목록</div>
+    <div class="tab-row" id="tabRow">
+      <button class="tab-button active" data-filter="all">전체</button>
+      <button class="tab-button" data-filter="긴급">긴급</button>
+      <button class="tab-button" data-filter="경고">경고</button>
+      <button class="tab-button" data-filter="해결">해결</button>
+    </div>
+    <div class="alert-list" id="alertList"></div>
+  `,
+});
+</script>
+<script src="../js/dashboard-status.js"></script>
+</html>

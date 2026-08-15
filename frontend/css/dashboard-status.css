@@ -1,0 +1,27 @@
+.main-content {
+  padding-top: 14px;
+  padding-left: 44px;
+  padding-right: 75px;
+}
+
+.stat-grid {
+  gap: 35px;
+}
+
+.stat-grid + .section-title {
+  margin-top: 26px;
+}
+
+.tab-row {
+  gap: 14px;
+  margin-bottom: 26px;
+}
+
+.alert-list {
+  gap: 24px;
+}
+
+.alert-card {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}

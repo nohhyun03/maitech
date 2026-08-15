@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>공정 이상 상세 | MAITECH</title>
+<link rel="stylesheet" href="../css/common.css">
+<link rel="stylesheet" href="../css/layout.css">
+<link rel="stylesheet" href="../css/dashboard-detail.css">
+</head>
+<body></body>
+<script src="../js/shell.js"></script>
+<script>
+renderAppShell({
+  active: 'detail',
+  role: 'worker',
+  mainHtml: `
+    <div class="breadcrumb">
+      <a class="breadcrumb-back" href="javascript:history.back()">&larr; 페이지 되돌아가기</a>
+    </div>
+    <div class="page-title-row">
+      <div>
+        <div class="page-heading">공정 이상 상세</div>
+        <div class="page-subheading">이상 알림 &gt; 상세 보기</div>
+      </div>
+      <a class="icon-badge" href="dashboard-simulation.html" title="시뮬레이션으로 이동">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L4 5V11C4 16.55 7.84 21.74 12 23C16.16 21.74 20 16.55 20 11V5L12 2Z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round" fill="none"/>
+          <path d="M8.5 12.2L11 14.7L15.8 9.7" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+
+    <div class="stat-grid stat-grid-5">
+      <div class="stat-card stat-card-compact"><span class="badge">심각도</span><div class="value">높음(Critical)</div></div>
+      <div class="stat-card stat-card-compact"><span class="badge">공정명</span><div class="value">압출 성형 공정 A-3</div></div>
+      <div class="stat-card stat-card-compact"><span class="badge">감지 시점</span><div class="value">2026.08.15 02:01</div></div>
+      <div class="stat-card stat-card-compact"><span class="badge">이상 지속 시간</span><div class="value">17분</div></div>
+      <div class="stat-card stat-card-compact"><span class="badge">현재 상태</span><div class="value">미조치</div></div>
+    </div>
+
+    <div class="section-title">
+      실시간 공정 상태 현황
+      <span class="updated-at">마지막 업데이트: 3분전</span>
+    </div>
+    <div class="stat-grid" id="metricGrid"></div>
+
+    <div class="section-title">AI 원인 분석</div>
+    <div class="two-col">
+      <div class="panel">
+        <span class="panel-label">주요 영향 변수</span>
+        <table class="data-table">
+          <thead>
+            <tr><th>변수명</th><th>기여도</th><th>현재값</th><th>기준값</th></tr>
+          </thead>
+          <tbody id="causeTableBody"></tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <span class="panel-label">AI 예상 원인</span>
+        <div id="causeList"></div>
+      </div>
+    </div>
+  `,
+});
+</script>
+<script src="../js/dashboard-detail.js"></script>
+</html>
