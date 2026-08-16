@@ -1,0 +1,32 @@
+# Secrets
+.figma_token.txt
+.env
+.env.*
+
+# Local-only planning docs
+docs/
+CLAUDE.md
+
+# Claude Code local settings
+.claude/
+
+# Node
+node_modules/
+
+# Python
+backend/venv/
+__pycache__/
+*.pyc
+*.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Logs / temp
+*.log

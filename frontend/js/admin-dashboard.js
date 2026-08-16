@@ -1,9 +1,9 @@
 const ALERTS = [
   { title: '긴급 압출 공정 A-4', desc: '압력 저하 감지: 2026.08.16 09:12', status: '미확인' },
-  { title: '긴급 압출 공정 A-4', desc: '압력 저하 감지: 2026.08.16 09:12', status: '확인 중' },
-  { title: '긴급 압출 공정 A-4', desc: '압력 저하 감지: 2026.08.16 09:12', status: '확인 중' },
+  { title: '긴급 압출 공정 A-4', desc: '압력 저하 감지: 2026.08.16 09:12', status: '조치중' },
+  { title: '긴급 압출 공정 A-4', desc: '압력 저하 감지: 2026.08.16 09:12', status: '조치중' },
   { title: '긴급 압출 공정 A-4', desc: '압력 저하 감지: 2026.08.16 09:12', status: '조치 완료' },
-  { title: '긴급 압출 공정 A-4', desc: '압력 저하 감지: 2026.08.16 09:12', status: '확인 중' },
+  { title: '긴급 압출 공정 A-4', desc: '압력 저하 감지: 2026.08.16 09:12', status: '조치중' },
   { title: '긴급 압출 공정 A-4', desc: '압력 저하 감지: 2026.08.16 09:12', status: '조치완료' },
 ];
 
@@ -18,7 +18,7 @@ const VARIABLE_ITEMS = [
 
 function statusClass(status) {
   if (status === '미확인') return 'status-unchecked';
-  if (status === '확인 중') return 'status-checking';
+  if (status === '조치중') return 'status-checking';
   return 'status-done';
 }
 
