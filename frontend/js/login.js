@@ -1,4 +1,38 @@
-document.getElementById('loginForm').addEventListener('submit', (e) => {
+const API_BASE = 'http://localhost:8000';
+
+const ROLE_HOME = {
+  worker: 'pages/dashboard-status.html',
+  manager: 'pages/admin-dashboard.html',
+};
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-  window.location.href = 'pages/dashboard-status.html';
+
+  const errorEl = document.getElementById('loginError');
+  errorEl.style.display = 'none';
+
+  const username = document.getElementById('loginId').value.trim();
+  const password = document.getElementById('loginPassword').value;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      errorEl.textContent = body.detail || '로그인에 실패했습니다.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    const user = await res.json();
+    sessionStorage.setItem('maitech_user', JSON.stringify(user));
+    window.location.href = ROLE_HOME[user.role] || ROLE_HOME.worker;
+  } catch (err) {
+    errorEl.textContent = '서버에 연결할 수 없습니다.';
+    errorEl.style.display = 'block';
+  }
 });

@@ -10,10 +10,11 @@
 </head>
 <body></body>
 <script src="../js/shell.js"></script>
+<script src="../js/api.js"></script>
 <script>
 renderAppShell({
   active: 'detail',
-  role: 'worker',
+  role: (getCurrentUser() || {}).role || 'worker',
   mainHtml: `
     <div class="breadcrumb">
       <a class="breadcrumb-back" href="javascript:history.back()">← 페이지 되돌아가기</a>
@@ -23,10 +24,10 @@ renderAppShell({
         <div class="page-heading">패턴 지속 시 예상 품질 영향</div>
         <div class="page-subheading">
           <span>이상 알림 &gt; 상세 보기</span>
-          <span>신뢰 수준: 중간 (72%) · 분석 기준 데이터: 2026. 08.15 13:22 기준</span>
+          <span id="confidenceLine"></span>
         </div>
       </div>
-      <a class="icon-badge" href="action-record.html" aria-label="조치 기록 작성으로 이동">
+      <a class="icon-badge" id="actionRecordLink" href="action-record.html" aria-label="조치 기록 작성으로 이동">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8l-5-5Z" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>
           <path d="M14 3v5h5" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>

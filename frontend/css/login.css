@@ -100,6 +100,17 @@
   color: var(--color-muted);
 }
 
+.login-error {
+  position: absolute;
+  left: 0;
+  top: 460px;
+  width: 500px;
+  text-align: center;
+  font-size: 14px;
+  color: #e0433d;
+  display: none;
+}
+
 .login-submit {
   position: absolute;
   left: 0;

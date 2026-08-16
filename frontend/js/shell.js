@@ -1,8 +1,15 @@
-const NAV_ITEMS = [
-  { key: 'status', label: '실시간 공정 상태 현황', icon: 'icon-clock.png', href: 'dashboard-status.html' },
-  { key: 'detail', label: '공정 이상 상세', icon: 'icon-bell.png', href: 'dashboard-detail.html' },
-  { key: 'settings', label: '설정', icon: 'icon-settings.png', href: '#' },
-];
+function getNavItems(role) {
+  const items = [
+    { key: 'status', label: '실시간 공정 상태 현황', icon: 'icon-clock.png', href: 'dashboard-status.html' },
+    { key: 'detail', label: '공정 이상 상세', icon: 'icon-bell.png', href: '#' },
+  ];
+
+  if (role === 'manager') {
+    items.push({ key: 'admin', label: '관리자 현황 확인', icon: 'icon-settings.png', href: 'admin-dashboard.html' });
+  }
+
+  return items;
+}
 
 const ROLE_LABEL = {
   worker: 'Worker Page',
@@ -10,7 +17,7 @@ const ROLE_LABEL = {
 };
 
 function renderAppShell({ active, role, mainHtml }) {
-  const navHtml = NAV_ITEMS.map((item) => `
+  const navHtml = getNavItems(role).map((item) => `
     <a class="nav-item${item.key === active ? ' active' : ''}" href="${item.href}">
       <img src="../images/${item.icon}" alt="">
       ${item.label}

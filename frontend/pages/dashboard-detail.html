@@ -10,10 +10,11 @@
 </head>
 <body></body>
 <script src="../js/shell.js"></script>
+<script src="../js/api.js"></script>
 <script>
 renderAppShell({
   active: 'detail',
-  role: 'worker',
+  role: (getCurrentUser() || {}).role || 'worker',
   mainHtml: `
     <div class="breadcrumb">
       <a class="breadcrumb-back" href="javascript:history.back()">&larr; 페이지 되돌아가기</a>
@@ -23,7 +24,7 @@ renderAppShell({
         <div class="page-heading">공정 이상 상세</div>
         <div class="page-subheading">이상 알림 &gt; 상세 보기</div>
       </div>
-      <a class="icon-badge" href="dashboard-simulation.html" title="시뮬레이션으로 이동">
+      <a class="icon-badge" id="simulationLink" href="dashboard-simulation.html" title="시뮬레이션으로 이동">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 2L4 5V11C4 16.55 7.84 21.74 12 23C16.16 21.74 20 16.55 20 11V5L12 2Z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round" fill="none"/>
           <path d="M8.5 12.2L11 14.7L15.8 9.7" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -31,17 +32,17 @@ renderAppShell({
       </a>
     </div>
 
-    <div class="stat-grid stat-grid-5">
-      <div class="stat-card stat-card-compact"><span class="badge">심각도</span><div class="value">높음(Critical)</div></div>
-      <div class="stat-card stat-card-compact"><span class="badge">공정명</span><div class="value">압출 성형 공정 A-3</div></div>
-      <div class="stat-card stat-card-compact"><span class="badge">감지 시점</span><div class="value">2026.08.15 02:01</div></div>
-      <div class="stat-card stat-card-compact"><span class="badge">이상 지속 시간</span><div class="value">17분</div></div>
-      <div class="stat-card stat-card-compact"><span class="badge">현재 상태</span><div class="value">미조치</div></div>
+    <div class="stat-grid stat-grid-5" id="summaryGrid">
+      <div class="stat-card stat-card-compact"><span class="badge">심각도</span><div class="value" id="summarySeverity"></div></div>
+      <div class="stat-card stat-card-compact"><span class="badge">공정명</span><div class="value" id="summaryProcess"></div></div>
+      <div class="stat-card stat-card-compact"><span class="badge">감지 시점</span><div class="value" id="summaryDetectedAt"></div></div>
+      <div class="stat-card stat-card-compact"><span class="badge">이상 지속 시간</span><div class="value" id="summaryDuration"></div></div>
+      <div class="stat-card stat-card-compact"><span class="badge">현재 상태</span><div class="value" id="summaryStatus"></div></div>
     </div>
 
     <div class="section-title">
       실시간 공정 상태 현황
-      <span class="updated-at">마지막 업데이트: 3분전</span>
+      <span class="updated-at" id="updatedAt">마지막 업데이트: 방금 전</span>
     </div>
     <div class="stat-grid" id="metricGrid"></div>
 
@@ -49,9 +50,9 @@ renderAppShell({
     <div class="two-col">
       <div class="panel">
         <span class="panel-label">주요 영향 변수</span>
-        <table class="data-table">
+        <table class="data-table" id="causeTable">
           <thead>
-            <tr><th>변수명</th><th>기여도</th><th>현재값</th><th>기준값</th></tr>
+            <tr><th>변수명</th><th>기여도</th><th>현재값</th><th>기준값</th><th>경고 범위</th></tr>
           </thead>
           <tbody id="causeTableBody"></tbody>
         </table>

@@ -10,10 +10,11 @@
 </head>
 <body></body>
 <script src="../js/shell.js"></script>
+<script src="../js/api.js"></script>
 <script>
 renderAppShell({
   active: 'status',
-  role: 'worker',
+  role: (getCurrentUser() || {}).role || 'worker',
   mainHtml: `
     <div class="section-title">
       실시간 공정 상태 현황

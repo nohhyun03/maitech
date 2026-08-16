@@ -1,43 +1,69 @@
-const METRICS = [
-  { badge: '압출 온도 편차', value: '+18.4℃', caption: '기준 대비 초과' },
-  { badge: '압력 변동 폭', value: '3.8 Mpa', caption: '정상 범위 초과' },
-  { badge: '라인 속도 이탈', value: '-11.7%', caption: '정상 범위 초과' },
-  { badge: '불량 예측 위험', value: '높음', caption: '정상 범위 초과' },
-];
+const anomalyId = new URLSearchParams(window.location.search).get('id');
 
-const CAUSES = [
-  { rank: '1순위', contribution: '기여도 71%', name: '가열 히터 응답 지연', desc: '히터 PID 제어 응답이 지연되며 온도 편차가 누적된 패턴과 일치합니다.' },
-  { rank: '2순위', contribution: '기여도 28%', name: '원료 점도 변화', desc: '원료 배치 교체 이후 점도 상승이 감지되어 압력 변동에 영향을 주고 있습니다.' },
-  { rank: '3순위', contribution: '기여도 5%', name: '냉각 구간 이상', desc: '냉각 수온 편차가 라인 속도 이탈과 복합적으로 작용하고 있습니다.' },
-];
+function renderSummary(event) {
+  document.getElementById('summarySeverity').textContent = event.severity_grade;
+  document.getElementById('summaryProcess').textContent = event.process_name;
+  document.getElementById('summaryDetectedAt').textContent = formatDateTime(event.detected_at);
+  document.getElementById('summaryDuration').textContent = formatDuration(event.duration_minutes);
+  document.getElementById('summaryStatus').textContent = event.status;
+}
 
-const CAUSE_TABLE_ROW_COUNT = 5;
-
-function renderMetrics() {
-  document.getElementById('metricGrid').innerHTML = METRICS.map((m) => `
+function renderMetrics(event, prediction) {
+  const topVariables = [...event.variables].sort((a, b) => b.score - a.score).slice(0, 3);
+  const variableCards = topVariables.map((v) => `
     <div class="stat-card">
-      <span class="badge">${m.badge}</span>
-      <div class="value">${m.value}</div>
-      <div class="caption">${m.caption}</div>
+      <span class="badge">${v.variable_name}</span>
+      <div class="value">${v.value}${v.unit ?? ''}</div>
+      <div class="caption">${v.grade} · 기준 ${v.direction ?? ''}</div>
     </div>
+  `).join('');
+
+  const predictionCard = prediction ? `
+    <div class="stat-card">
+      <span class="badge">위험 예측</span>
+      <div class="value">${prediction.impact_label}</div>
+      <div class="caption">불량 가능성 ${prediction.confidence_pct.toFixed(1)}%</div>
+    </div>
+  ` : '';
+
+  document.getElementById('metricGrid').innerHTML = variableCards + predictionCard;
+}
+
+function renderCauseTable(causes) {
+  document.getElementById('causeTableBody').innerHTML = causes.map((c) => `
+    <tr>
+      <td>${c.variable_name}${c.unit ? ` (${c.unit})` : ''}</td>
+      <td>${c.contribution_pct === 0 ? '0' : c.contribution_pct.toFixed(1)}%</td>
+      <td>${c.current_value ?? '-'}</td>
+      <td>${c.golden_value ?? '-'}</td>
+      <td>${c.lower_bound ?? '-'}~${c.upper_bound ?? '-'}</td>
+    </tr>
   `).join('');
 }
 
-function renderCauseTable() {
-  const row = `<tr>${'<td><span class="skeleton"></span></td>'.repeat(4)}</tr>`;
-  document.getElementById('causeTableBody').innerHTML = row.repeat(CAUSE_TABLE_ROW_COUNT);
-}
-
-function renderCauseList() {
-  document.getElementById('causeList').innerHTML = CAUSES.map((c) => `
+function renderCauseList(causes) {
+  document.getElementById('causeList').innerHTML = causes.filter((c) => c.rank !== null).map((c) => `
     <div class="cause-item">
-      <div class="cause-rank"><span>${c.rank}</span><span>${c.contribution}</span></div>
-      <div class="cause-name">${c.name}</div>
-      <div class="cause-desc">${c.desc}</div>
+      <div class="cause-rank"><span>${c.rank}순위</span><span>가능성 ${c.likelihood_pct.toFixed(1)}%</span></div>
+      <div class="cause-name">${c.cause_name}</div>
+      <div class="cause-desc">${c.description}</div>
     </div>
   `).join('');
 }
 
-renderMetrics();
-renderCauseTable();
-renderCauseList();
+async function load() {
+  const [event, causes, prediction] = await Promise.all([
+    getAnomaly(anomalyId),
+    getCauses(anomalyId),
+    getQualityPrediction(anomalyId),
+  ]);
+
+  document.getElementById('simulationLink').href = `dashboard-simulation?id=${anomalyId}`;
+
+  renderSummary(event);
+  renderMetrics(event, prediction);
+  renderCauseTable(causes);
+  renderCauseList(causes);
+}
+
+load();
