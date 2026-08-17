@@ -71,7 +71,7 @@ class Case(Base):
     category = Column(String, nullable=False)
     direction = Column(String, nullable=False)
     situation = Column(Text, nullable=False)
-    cause = Column(Text, nullable=False)
+    possible_causes = Column(JSON, nullable=False)
     quality_impact = Column(Text, nullable=False)
     defect_tags = Column(JSON, nullable=False)
     response = Column(Text, nullable=False)
@@ -94,25 +94,21 @@ class AnomalyEvent(Base):
     variables = Column(JSON, nullable=False)
 
     scenario = relationship("Scenario", back_populates="anomaly_events")
-    cause_analyses = relationship("CauseAnalysis", back_populates="anomaly_event")
+    cause_summary = relationship("CauseSummary", back_populates="anomaly_event", uselist=False)
     quality_predictions = relationship("QualityPrediction", back_populates="anomaly_event")
     recommended_actions = relationship("RecommendedAction", back_populates="anomaly_event")
     action_records = relationship("ActionRecord", back_populates="anomaly_event")
 
 
-class CauseAnalysis(Base):
-    __tablename__ = "cause_analyses"
+class CauseSummary(Base):
+    __tablename__ = "cause_summaries"
 
     id = Column(Integer, primary_key=True)
-    anomaly_event_id = Column(String, ForeignKey("anomaly_events.id"), nullable=False)
-    rank = Column(Integer, nullable=False)
-    contribution_pct = Column(Float, nullable=False)
-    cause_name = Column(String, nullable=False)
-    description = Column(Text, nullable=False)
-    matched_case_id = Column(Integer, ForeignKey("cases.id"), nullable=True)
+    anomaly_event_id = Column(String, ForeignKey("anomaly_events.id"), nullable=False, unique=True)
+    variable_signature = Column(String, nullable=False)
+    causes = Column(JSON, nullable=False)
 
-    anomaly_event = relationship("AnomalyEvent", back_populates="cause_analyses")
-    matched_case = relationship("Case")
+    anomaly_event = relationship("AnomalyEvent", back_populates="cause_summary")
 
 
 class QualityPrediction(Base):

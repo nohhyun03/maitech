@@ -41,24 +41,29 @@ function renderAlerts(events) {
   `).join('') || '<p style="color:#999;">알림이 없습니다.</p>';
 }
 
+const expandedRecordIds = new Set();
+
 function renderRecordTable(records) {
   const body = document.getElementById('recordTableBody');
-  body.innerHTML = records.map((r) => `
+  body.innerHTML = records.map((r) => {
+    const expanded = expandedRecordIds.has(String(r.id));
+    return `
     <tr data-row-id="${r.id}">
       <td>${r.process_name}</td>
       <td>${r.issue_type}</td>
       <td>
-        <div class="action-content-cell collapsed">
+        <div class="action-content-cell ${expanded ? 'expanded' : 'collapsed'}">
           <strong>수행 조치</strong> ${r.action_content}
           ${r.extra_notes ? `<div class="extra-notes"><strong>특이사항</strong> ${r.extra_notes}</div>` : ''}
         </div>
-        <button type="button" class="expand-toggle" data-id="${r.id}">자세히 보기</button>
+        <button type="button" class="expand-toggle" data-id="${r.id}">${expanded ? '접기' : '자세히 보기'}</button>
       </td>
       <td>
         <input type="checkbox" class="confirm-checkbox" data-id="${r.id}">
       </td>
     </tr>
-  `).join('') || '<tr><td colspan="4" style="color:#999;">확인 대기 중인 조치 기록이 없습니다.</td></tr>';
+  `;
+  }).join('') || '<tr><td colspan="4" style="color:#999;">확인 대기 중인 조치 기록이 없습니다.</td></tr>';
 
   body.querySelectorAll('.expand-toggle').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -66,6 +71,11 @@ function renderRecordTable(records) {
       const expanded = cell.classList.toggle('expanded');
       cell.classList.toggle('collapsed', !expanded);
       btn.textContent = expanded ? '접기' : '자세히 보기';
+      if (expanded) {
+        expandedRecordIds.add(btn.dataset.id);
+      } else {
+        expandedRecordIds.delete(btn.dataset.id);
+      }
     });
   });
 
@@ -102,3 +112,4 @@ async function load() {
 }
 
 load();
+setInterval(load, 3000);

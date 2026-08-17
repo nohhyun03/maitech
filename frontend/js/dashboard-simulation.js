@@ -59,3 +59,4 @@ async function load() {
 }
 
 load();
+setInterval(load, 3000);

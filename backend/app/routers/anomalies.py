@@ -5,7 +5,7 @@ from ..action_record import start_action, submit_action_record
 from ..cause_analysis import analyze_causes, direction_of
 from ..database import get_db
 from ..detection import run_detection
-from ..models import AnomalyEvent, ProcessData, VariableThreshold
+from ..models import AnomalyEvent, VariableThreshold
 from ..quality_impact import predict_quality_impact
 from ..quality_prediction import predict_quality
 from ..recommended_action import recommend_actions
@@ -55,66 +55,22 @@ def get_causes(anomaly_event_id: str, db: Session = Depends(get_db)):
     if event is None:
         raise HTTPException(status_code=404, detail="해당 이상 건을 찾을 수 없습니다.")
 
-    results = analyze_causes(db, anomaly_event_id)
-    thresholds = {t.variable_name: t for t in db.query(VariableThreshold).all()}
-    values = {v["variable_name"]: v["value"] for v in event.variables}
+    all_variables, causes = analyze_causes(db, anomaly_event_id)
 
-    response = []
-    seen = set()
-    for r in results:
-        threshold = thresholds.get(r.variable_name)
-        response.append(
-            {
-                "rank": r.rank,
-                "contribution_pct": r.contribution_pct,
-                "likelihood_pct": r.likelihood_pct,
-                "variable_name": r.variable_name,
-                "cause_name": r.cause_name,
-                "description": r.description,
-                "quality_impact": r.matched_case.quality_impact if r.matched_case else None,
-                "matched_case_id": r.matched_case_id,
-                "current_value": values.get(r.variable_name),
-                "golden_value": threshold.golden_value if threshold else None,
-                "lower_bound": threshold.lower_bound if threshold else None,
-                "upper_bound": threshold.upper_bound if threshold else None,
-                "unit": threshold.unit if threshold else None,
-            }
-        )
-        seen.add(r.variable_name)
+    variables_response = [
+        {
+            "variable_name": v["variable_name"],
+            "contribution_pct": v["contribution_pct"],
+            "current_value": v["current_value"],
+            "golden_value": v["threshold"].golden_value if v["threshold"] else None,
+            "lower_bound": v["threshold"].lower_bound if v["threshold"] else None,
+            "upper_bound": v["threshold"].upper_bound if v["threshold"] else None,
+            "unit": v["threshold"].unit if v["threshold"] else None,
+        }
+        for v in all_variables
+    ]
 
-    for name, threshold in thresholds.items():
-        if name in seen:
-            continue
-        latest = (
-            db.query(ProcessData)
-            .filter(
-                ProcessData.scenario_id == event.scenario_id,
-                ProcessData.variable_name == name,
-                ProcessData.timestamp <= event.last_updated_at,
-            )
-            .order_by(ProcessData.timestamp.desc())
-            .first()
-        )
-        response.append(
-            {
-                "rank": None,
-                "contribution_pct": 0.0,
-                "likelihood_pct": 0.0,
-                "variable_name": name,
-                "cause_name": None,
-                "description": None,
-                "quality_impact": None,
-                "matched_case_id": None,
-                "current_value": latest.value if latest else threshold.golden_value,
-                "golden_value": threshold.golden_value,
-                "lower_bound": threshold.lower_bound,
-                "upper_bound": threshold.upper_bound,
-                "unit": threshold.unit,
-            }
-        )
-
-    response.sort(key=lambda r: r["contribution_pct"], reverse=True)
-    return response
+    return {"variables": variables_response, "causes": causes}
 
 
 @router.get("/{anomaly_event_id}/quality-impact")

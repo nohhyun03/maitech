@@ -26,41 +26,41 @@ def recommend_actions(db: Session, anomaly_event_id: str):
 
     db.query(RecommendedAction).filter(RecommendedAction.anomaly_event_id == anomaly_event_id).delete()
 
-    causes = analyze_causes(db, anomaly_event_id)
-    ranked = [c for c in causes if c.contribution_pct > 0][:MAX_ACTIONS]
+    all_variables, _ = analyze_causes(db, anomaly_event_id)
+    ranked = [v for v in all_variables if v["contribution_pct"] > 0][:MAX_ACTIONS]
 
     thresholds = {t.variable_name: t for t in db.query(VariableThreshold).all()}
     current_pct = _defect_probability(_total_score(event), event.duration_minutes)
 
     results = []
     for rank, cause in enumerate(ranked, start=1):
-        threshold = thresholds.get(cause.variable_name)
+        threshold = thresholds.get(cause["variable_name"])
         if threshold is None:
             continue
 
         target = threshold.golden_value
         variable_value = next(
-            (v["value"] for v in event.variables if v["variable_name"] == cause.variable_name),
+            (v["value"] for v in event.variables if v["variable_name"] == cause["variable_name"]),
             target,
         )
         direction = direction_of(variable_value, threshold)
-        case = match_case(db, cause.variable_name, direction)
+        case = match_case(db, cause["variable_name"], direction)
 
-        action_name = case.response if case is not None else f"{cause.variable_name} 이상 대응 방법 검토 필요"
+        action_name = case.response if case is not None else f"{cause['variable_name']} 이상 대응 방법 검토 필요"
 
         action = RecommendedAction(
             anomaly_event_id=anomaly_event_id,
             rank=rank,
             priority=URGENCY_BY_RANK.get(rank, "순차 처리"),
             action_name=action_name,
-            description=_describe(cause.variable_name, case),
-            score=cause.contribution_pct,
+            description=_describe(cause["variable_name"], case),
+            score=cause["contribution_pct"],
         )
-        action.variable_name = cause.variable_name
+        action.variable_name = cause["variable_name"]
         action.current_value = variable_value
         action.target_value = target
         action.unit = threshold.unit
-        action.expected_effect = _expected_effect(current_pct, defect_probability_excluding(event, cause.variable_name))
+        action.expected_effect = _expected_effect(current_pct, defect_probability_excluding(event, cause["variable_name"]))
 
         db.add(action)
         results.append(action)

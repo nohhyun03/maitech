@@ -42,7 +42,7 @@ function renderCauseTable(causes) {
 }
 
 function renderCauseList(causes) {
-  document.getElementById('causeList').innerHTML = causes.filter((c) => c.rank !== null).map((c) => `
+  document.getElementById('causeList').innerHTML = causes.map((c) => `
     <div class="cause-item">
       <div class="cause-rank"><span>${c.rank}순위</span><span>가능성 ${c.likelihood_pct.toFixed(1)}%</span></div>
       <div class="cause-name">${c.cause_name}</div>
@@ -51,19 +51,35 @@ function renderCauseList(causes) {
   `).join('');
 }
 
-async function load() {
-  const [event, causes, prediction] = await Promise.all([
-    getAnomaly(anomalyId),
-    getCauses(anomalyId),
-    getQualityPrediction(anomalyId),
-  ]);
+let causesLoadingTimer = null;
 
+function showCausesLoading() {
+  causesLoadingTimer = setTimeout(() => {
+    document.getElementById('causesStatus').textContent = 'AI 분석 중...';
+  }, 400);
+}
+
+function hideCausesLoading() {
+  clearTimeout(causesLoadingTimer);
+  document.getElementById('causesStatus').textContent = '';
+}
+
+async function load() {
   document.getElementById('simulationLink').href = `dashboard-simulation?id=${anomalyId}`;
 
+  const [event, prediction] = await Promise.all([
+    getAnomaly(anomalyId),
+    getQualityPrediction(anomalyId),
+  ]);
   renderSummary(event);
   renderMetrics(event, prediction);
-  renderCauseTable(causes);
-  renderCauseList(causes);
+
+  showCausesLoading();
+  const causeData = await getCauses(anomalyId);
+  hideCausesLoading();
+  renderCauseTable(causeData.variables);
+  renderCauseList(causeData.causes);
 }
 
 load();
+setInterval(load, 3000);
