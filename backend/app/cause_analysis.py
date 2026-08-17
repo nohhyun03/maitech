@@ -55,6 +55,7 @@ def compute_variable_causes(db: Session, event: AnomalyEvent) -> list[dict]:
             db.query(ProcessData)
             .filter(
                 ProcessData.scenario_id == event.scenario_id,
+                ProcessData.process_name == event.process_name,
                 ProcessData.variable_name == name,
                 ProcessData.timestamp <= event.last_updated_at,
             )

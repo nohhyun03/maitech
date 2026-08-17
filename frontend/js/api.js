@@ -29,6 +29,10 @@ function getAnomaly(id) {
   return getAnomalies().then((events) => events.find((e) => e.id === id));
 }
 
+function getVariables(id) {
+  return apiGet(`/api/anomalies/${id}/variables`);
+}
+
 function getCauses(id) {
   return apiGet(`/api/anomalies/${id}/causes`);
 }

@@ -51,21 +51,18 @@ function renderCauseList(causes) {
   `).join('');
 }
 
-let causesLoadingTimer = null;
-
-function showCausesLoading() {
-  causesLoadingTimer = setTimeout(() => {
-    document.getElementById('causesStatus').textContent = 'AI 분석 중...';
-  }, 400);
+function renderCausesLoading() {
+  document.getElementById('causeList').innerHTML = `
+    <div class="cause-item cause-item-loading">AI가 원인을 분석하고 있습니다...</div>
+  `;
 }
 
-function hideCausesLoading() {
-  clearTimeout(causesLoadingTimer);
-  document.getElementById('causesStatus').textContent = '';
-}
+let causesLoaded = false;
 
 async function load() {
   document.getElementById('simulationLink').href = `dashboard-simulation?id=${anomalyId}`;
+
+  if (!causesLoaded) renderCausesLoading();
 
   const [event, prediction] = await Promise.all([
     getAnomaly(anomalyId),
@@ -74,11 +71,12 @@ async function load() {
   renderSummary(event);
   renderMetrics(event, prediction);
 
-  showCausesLoading();
+  const variables = await getVariables(anomalyId);
+  renderCauseTable(variables);
+
   const causeData = await getCauses(anomalyId);
-  hideCausesLoading();
-  renderCauseTable(causeData.variables);
   renderCauseList(causeData.causes);
+  causesLoaded = true;
 }
 
 load();

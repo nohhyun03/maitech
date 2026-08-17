@@ -65,3 +65,7 @@
   margin-bottom: 16px;
 }
 
+.impact-loading {
+  grid-column: 1 / -1;
+}
+

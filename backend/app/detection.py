@@ -23,6 +23,21 @@ def _open_event(db: Session, scenario_id: int, process_name: str):
     )
 
 
+def _already_completed(db: Session, scenario_id: int, process_name: str, timestamp) -> bool:
+    return (
+        db.query(AnomalyEvent)
+        .filter(
+            AnomalyEvent.scenario_id == scenario_id,
+            AnomalyEvent.process_name == process_name,
+            AnomalyEvent.status == "조치완료",
+            AnomalyEvent.detected_at <= timestamp,
+            AnomalyEvent.last_updated_at >= timestamp,
+        )
+        .first()
+        is not None
+    )
+
+
 def run_detection(db: Session):
     scenario_id = playback.active_scenario_id()
     if scenario_id is None:
@@ -60,6 +75,8 @@ def run_detection(db: Session):
 
         event = _open_event(db, scenario_id, row.process_name)
         if event is None:
+            if _already_completed(db, scenario_id, row.process_name, row.timestamp):
+                continue
             event = AnomalyEvent(
                 id=uuid.uuid4().hex,
                 scenario_id=scenario_id,

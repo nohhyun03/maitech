@@ -9,6 +9,12 @@ function renderImpact(impacts) {
   `).join('');
 }
 
+function renderImpactLoading() {
+  document.getElementById('impactGrid').innerHTML = `
+    <div class="cause-item-loading impact-loading">AI가 예상 품질 영향을 분석하고 있습니다...</div>
+  `;
+}
+
 function renderSimTable(actions) {
   const seen = new Set();
   const rows = actions.filter((a) => {
@@ -41,23 +47,19 @@ function renderActions(actions) {
   `).join('');
 }
 
-let impactLoadingTimer = null;
-
-function showImpactLoading() {
-  impactLoadingTimer = setTimeout(() => {
-    document.getElementById('impactStatus').textContent = 'AI 분석 중...';
-  }, 400);
-}
-
-function hideImpactLoading() {
-  clearTimeout(impactLoadingTimer);
-  document.getElementById('impactStatus').textContent = '';
+function renderActionsLoading() {
+  document.getElementById('actionList').innerHTML = `
+    <div class="cause-item cause-item-loading">AI가 권장 조치를 정리하고 있습니다...</div>
+  `;
 }
 
 async function load() {
   await startAction(anomalyId);
 
   document.getElementById('actionRecordLink').href = `action-record?id=${anomalyId}`;
+
+  renderActionsLoading();
+  renderImpactLoading();
 
   const [prediction, actions] = await Promise.all([
     getQualityPrediction(anomalyId),
@@ -68,9 +70,7 @@ async function load() {
   renderSimTable(actions);
   renderActions(actions);
 
-  showImpactLoading();
   const impact = await getQualityImpact(anomalyId);
-  hideImpactLoading();
   renderImpact(impact);
 }
 

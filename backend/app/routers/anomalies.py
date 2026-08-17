@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..action_record import start_action, submit_action_record
-from ..cause_analysis import analyze_causes, direction_of
+from ..cause_analysis import analyze_causes, compute_variable_causes, direction_of
 from ..database import get_db
 from ..detection import run_detection
 from ..models import AnomalyEvent, VariableThreshold
@@ -49,15 +49,8 @@ def list_anomalies(db: Session = Depends(get_db)):
     ]
 
 
-@router.get("/{anomaly_event_id}/causes")
-def get_causes(anomaly_event_id: str, db: Session = Depends(get_db)):
-    event = db.query(AnomalyEvent).filter(AnomalyEvent.id == anomaly_event_id).first()
-    if event is None:
-        raise HTTPException(status_code=404, detail="해당 이상 건을 찾을 수 없습니다.")
-
-    all_variables, causes = analyze_causes(db, anomaly_event_id)
-
-    variables_response = [
+def _variables_response(all_variables: list[dict]) -> list[dict]:
+    return [
         {
             "variable_name": v["variable_name"],
             "contribution_pct": v["contribution_pct"],
@@ -70,7 +63,25 @@ def get_causes(anomaly_event_id: str, db: Session = Depends(get_db)):
         for v in all_variables
     ]
 
-    return {"variables": variables_response, "causes": causes}
+
+@router.get("/{anomaly_event_id}/variables")
+def get_variables(anomaly_event_id: str, db: Session = Depends(get_db)):
+    event = db.query(AnomalyEvent).filter(AnomalyEvent.id == anomaly_event_id).first()
+    if event is None:
+        raise HTTPException(status_code=404, detail="해당 이상 건을 찾을 수 없습니다.")
+
+    all_variables = compute_variable_causes(db, event)
+    return _variables_response(all_variables)
+
+
+@router.get("/{anomaly_event_id}/causes")
+def get_causes(anomaly_event_id: str, db: Session = Depends(get_db)):
+    event = db.query(AnomalyEvent).filter(AnomalyEvent.id == anomaly_event_id).first()
+    if event is None:
+        raise HTTPException(status_code=404, detail="해당 이상 건을 찾을 수 없습니다.")
+
+    _, causes = analyze_causes(db, anomaly_event_id)
+    return {"causes": causes}
 
 
 @router.get("/{anomaly_event_id}/quality-impact")

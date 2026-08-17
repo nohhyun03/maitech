@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from sqlalchemy import func
 
-SPEED_MULTIPLIER = 10
+SPEED_MULTIPLIER = 2
 
 _state = {"scenario_id": None, "started_real": None, "base_time": None}
 
