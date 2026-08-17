@@ -26,7 +26,7 @@ def generate_holistic_causes(contributing: list[dict]):
         else:
             case_context = "일치하는 과거 사례 없음"
         variable_lines.append(
-            f"- {v['variable_name']}: 기준값 대비 {v['direction']}, 기여도 {v['contribution_pct']:.1f}%, 현재값 {v['current_value']}. {case_context}"
+            f"- {v['variable_name']}: 기준값 대비 {v['direction']}, 기여도 {v['contribution_pct']:.1f}%. {case_context}"
         )
 
     prompt = (
@@ -58,8 +58,11 @@ def generate_holistic_causes(contributing: list[dict]):
         "1순위 > 2순위 > 3순위 순으로 감소해야 하고, 후보들의 그럴듯함 차이가 크면 숫자 차이도 크게, 비슷하면 차이도 작게 반영해.\n\n"
         "related_variables가 2개 이상인 결합 원인에는 반드시 link_justification 필드에 위 ①·② 중 어느 근거인지와 구체적 이유를 적어. "
         "근거를 못 대겠으면 애초에 결합 원인으로 만들지 말고 개별 원인으로 나눠. 변수가 1개뿐인 원인은 link_justification을 빈 문자열로 둬.\n\n"
+        "매우 중요한 제약: cause_name과 description 어디에도 현재값 같은 구체적인 숫자(예: 200.0, 78, 7.8)를 절대 인용하지 마. "
+        "이 수치는 화면의 다른 표에 이미 표시되고 있고, 여기서 숫자를 인용하면 나중에 값이 갱신돼도 이 설명은 갱신되지 않아 틀린 숫자로 남게 돼. "
+        "대신 \"크게 상승\", \"기준 상한을 초과\", \"소폭 저하\"처럼 방향과 정도를 정성적으로만 표현해.\n\n"
         "description은 두 부분을 모두 포함해서 3~4문장으로 풍부하게 써: "
-        "(1) 결함이 발생한 지점부터 관측된 변수 이상까지 이어지는 물리적 메커니즘을 \"결함 발생 → 중간 물리적 변화(온도/압력/점도 등 실제 값의 변화 방향과 정도) → 최종적으로 관측된 변수 이상\" 순서로 단계별로 구체적으로 서술하고, "
+        "(1) 결함이 발생한 지점부터 관측된 변수 이상까지 이어지는 물리적 메커니즘을 \"결함 발생 → 중간 물리적 변화(온도/압력/점도 등의 변화 방향과 정도를 정성적으로) → 최종적으로 관측된 변수 이상\" 순서로 단계별로 구체적으로 서술하고, "
         "(2) 위에 주어진 유사 사례가 있다면 그 사례의 상황(situation)과 결과(result)를 구체적으로 인용해서, "
         "\"과거 유사 사례(그 상황 내용)에서도 같은 패턴이 있었고, 그때는 (그 결과 내용)로 이어졌다\"는 식으로 이번 판단이 과거 숙련자들의 경험적 사례에 근거하고 있음을 자연스럽게 드러내. "
         "유사 사례가 없는 변수라면 (2)는 생략하고 (1)만 상세히 써도 돼. "
@@ -142,5 +145,55 @@ def generate_quality_impacts(contributing: list[dict]):
         if not impacts or not isinstance(impacts, list):
             return None
         return impacts
+    except Exception:
+        return None
+
+
+def generate_recommended_actions(entries: list[dict]):
+    if _client is None:
+        return None
+
+    entry_lines = []
+    for i, e in enumerate(entries):
+        past_action_text = (
+            f"과거 실제 조치: {e['response']} / 조치 결과: {e['result']}"
+            if e["response"] is not None
+            else "일치하는 과거 조치 사례 없음"
+        )
+        entry_lines.append(
+            f"[{i}] 원인: {e['cause_name']} (가능성 {e['likelihood_pct']:.1f}%). {past_action_text}"
+        )
+
+    prompt = (
+        "다음은 이번 이상 건에 대해 AI가 이미 판단한 원인 후보들과, 각 원인에 대응했던 과거 실제 조치 사례야.\n\n"
+        + "\n".join(entry_lines)
+        + "\n\n작업자는 이 조치들을 하나만 골라 수행하는 게 아니라, 아래에서 정할 우선순위 순서대로 전부 차례차례 수행하는 것이 "
+        "기본 대응 방식이야. 위 원인들의 가능성을 종합적으로 비교해서 각 조치에 \"즉시\", \"30분 이내\", \"순차 처리\" 중 "
+        "하나씩 우선순위를 배정해줘. 원인이 3개면 세 등급을 정확히 하나씩만 써야 하고, 그보다 적으면 있는 개수만큼 "
+        "높은 등급부터 순서대로 배정해.\n\n"
+        "각 조치의 description은 작업자에게 지시하는 명령형 어조로 써(\"~하십시오\", \"~점검하십시오\", \"~확인하십시오\"). "
+        "원인의 발생 메커니즘을 다시 설명하지 말고(그건 이미 다른 화면에 나와 있어), 과거 실제 조치 내용을 근거로 "
+        "지금 무엇을 점검·조정해야 하는지 구체적으로 지시한 뒤, 과거 조치 결과를 근거로 어떤 상태가 되면 정상화된 것으로 "
+        "볼 수 있는지 확인 기준을 함께 제시해. 2~3문장으로 써. 과거 조치 사례가 없는 원인이라면 원인명을 근거로 "
+        "일반적인 점검 지시를 명령형으로 써.\n\n"
+        "다음 JSON 형식으로만 응답해: "
+        '{"actions": [{"cause_index": 0, "priority": "즉시", "description": "명령형 지시 2~3문장"}]}\n'
+        "cause_index는 위 목록의 대괄호 번호와 정확히 일치해야 하고, 모든 원인에 대해 하나씩 빠짐없이 응답해."
+    )
+
+    try:
+        response = _client.models.generate_content(
+            model=MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                temperature=0.3,
+            ),
+        )
+        data = json.loads(response.text)
+        actions = data.get("actions")
+        if not actions or not isinstance(actions, list):
+            return None
+        return actions
     except Exception:
         return None
