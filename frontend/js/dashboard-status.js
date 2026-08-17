@@ -38,7 +38,7 @@ document.getElementById('tabRow').addEventListener('click', (e) => {
   if (!btn) return;
   document.querySelectorAll('.tab-button').forEach((b) => b.classList.remove('active'));
   btn.classList.add('active');
-  currentFilter = btn.dataset.filter === '해결' ? '해결' : btn.dataset.filter;
+  currentFilter = btn.dataset.filter;
   renderAlerts();
 });
 

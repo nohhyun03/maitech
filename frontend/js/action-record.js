@@ -29,9 +29,10 @@ submitBtn.addEventListener('click', async () => {
 
 async function load() {
   const currentUser = getCurrentUser();
-  const [event, actions] = await Promise.all([
+  const [event, actions, scenario] = await Promise.all([
     getAnomaly(anomalyId),
     getRecommendedActions(anomalyId),
+    getScenarioStatus(),
   ]);
 
   document.getElementById('infoProcess').textContent = event.process_name;
@@ -39,7 +40,9 @@ async function load() {
   document.getElementById('infoSeverity').textContent = event.severity_grade;
   document.getElementById('infoVariables').textContent = `${event.variables.map((v) => v.variable_name).join(', ')} 이상`;
   document.getElementById('infoId').textContent = event.id;
-  document.getElementById('infoActionAt').textContent = formatDateTime(new Date().toISOString());
+  document.getElementById('infoActionAt').textContent = scenario.current_time
+    ? formatDateTime(scenario.current_time)
+    : '-';
   document.getElementById('infoStatus').textContent = event.status;
 
   const receiverLabel = currentUser.role === 'manager' ? '생산 관리자' : '현장 작업자';

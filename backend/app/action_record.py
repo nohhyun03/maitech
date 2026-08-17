@@ -1,5 +1,8 @@
+from datetime import datetime
+
 from sqlalchemy.orm import Session
 
+from . import playback
 from .models import ActionRecord, AnomalyEvent, User
 from .quality_prediction import predict_quality
 
@@ -52,6 +55,7 @@ def submit_action_record(
         notification_sent=True,
         manager_confirmed=False,
         tentative_result=tentative_result,
+        recorded_at=playback.current_scenario_time() or datetime.utcnow(),
     )
     db.add(record)
 

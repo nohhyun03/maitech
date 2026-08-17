@@ -1,5 +1,3 @@
-const API_BASE = 'http://localhost:8000';
-
 const ROLE_HOME = {
   worker: 'pages/dashboard-status.html',
   manager: 'pages/admin-dashboard.html',

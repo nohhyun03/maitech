@@ -6,9 +6,5 @@ def has_final_consonant(word: str) -> bool:
     return False
 
 
-def object_particle(word: str) -> str:
-    return "을" if has_final_consonant(word) else "를"
-
-
 def subject_particle(word: str) -> str:
     return "이" if has_final_consonant(word) else "가"

@@ -16,6 +16,57 @@ const ROLE_LABEL = {
   manager: 'Manager Page',
 };
 
+function formatScenarioClock(isoString) {
+  if (!isoString) return '--:--:--';
+  const d = new Date(isoString);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+let scenarioPollTimer = null;
+
+function renderScenarioControl(status) {
+  const el = document.getElementById('scenarioControl');
+  if (!el) return;
+
+  const statusText = !status.started
+    ? '시작 전'
+    : status.finished
+      ? '재생 완료'
+      : status.running
+        ? '재생 중'
+        : '일시정지됨';
+  const hidePlayback = !status.started || status.finished;
+
+  el.innerHTML = `
+    <span class="scenario-status">${statusText}</span>
+    <button type="button" id="scenarioStartBtn" ${status.started ? 'style="display:none"' : ''}>시작</button>
+    <span class="scenario-clock">${formatScenarioClock(status.current_time)}</span>
+    <button type="button" id="scenarioPauseBtn" ${hidePlayback || !status.running ? 'style="display:none"' : ''}>일시정지</button>
+    <button type="button" id="scenarioResumeBtn" ${hidePlayback || status.running ? 'style="display:none"' : ''}>재생</button>
+    <button type="button" id="scenarioRestartBtn" ${!status.started ? 'style="display:none"' : ''}>재시작</button>
+  `;
+
+  document.getElementById('scenarioStartBtn').addEventListener('click', async () => {
+    renderScenarioControl(await startScenario());
+  });
+  document.getElementById('scenarioPauseBtn').addEventListener('click', async () => {
+    renderScenarioControl(await pauseScenario());
+  });
+  document.getElementById('scenarioResumeBtn').addEventListener('click', async () => {
+    renderScenarioControl(await resumeScenario());
+  });
+  document.getElementById('scenarioRestartBtn').addEventListener('click', async () => {
+    renderScenarioControl(await restartScenario());
+  });
+
+  if (scenarioPollTimer === null) {
+    scenarioPollTimer = setInterval(() => {
+      getScenarioStatus().then(renderScenarioControl);
+    }, 1000);
+  }
+}
+
 function renderAppShell({ active, role, mainHtml }) {
   const navHtml = getNavItems(role).map((item) => `
     <a class="nav-item${item.key === active ? ' active' : ''}" href="${item.href}">
@@ -37,6 +88,7 @@ function renderAppShell({ active, role, mainHtml }) {
             <img src="../images/icon-search.png" alt="">
             <input type="text" placeholder="검색">
           </div>
+          <div class="scenario-control" id="scenarioControl"></div>
           <div class="profile-icon"><img src="../images/icon-profile.png" alt="프로필"></div>
         </div>
       </header>
@@ -46,4 +98,6 @@ function renderAppShell({ active, role, mainHtml }) {
       </div>
     </div>
   `;
+
+  getScenarioStatus().then(renderScenarioControl);
 }

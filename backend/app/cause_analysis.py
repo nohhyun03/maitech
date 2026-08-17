@@ -78,12 +78,6 @@ def compute_variable_causes(db: Session, event: AnomalyEvent) -> list[dict]:
     return results
 
 
-BASE_CONFIDENCE = 0.4
-SEVERITY_WEIGHT = 0.3
-CASE_MATCH_WEIGHT = 0.3
-SEVERITY_SCORE_CAP = 2.0
-
-
 def _cause_name_rule_based(variable_name: str, case) -> str:
     if case is not None:
         return case.possible_causes[0]["name"]
@@ -127,8 +121,9 @@ def _postprocess_ai_causes(raw_causes: list, contributing: list[dict]):
     contribution_by_name = {vc["variable_name"]: vc["contribution_pct"] for vc in contributing}
     valid_names = set(contribution_by_name)
 
+    considered = raw_causes[:MAX_AI_CAUSES]
     results = []
-    for item in raw_causes[:MAX_AI_CAUSES]:
+    for item in considered:
         cause_name = item.get("cause_name")
         description = item.get("description")
         related = [name for name in item.get("related_variables", []) if name in valid_names]
@@ -153,7 +148,7 @@ def _postprocess_ai_causes(raw_causes: list, contributing: list[dict]):
             }
         )
 
-    if not results:
+    if len(results) < 2 or len(results) != len(considered):
         return None
 
     results.sort(key=lambda c: c["likelihood_pct"], reverse=True)
@@ -164,8 +159,10 @@ def _postprocess_ai_causes(raw_causes: list, contributing: list[dict]):
 
 def _generate_causes(contributing: list[dict]) -> list[dict]:
     if contributing:
-        raw = generate_holistic_causes(contributing)
-        if raw is not None:
+        for _ in range(2):
+            raw = generate_holistic_causes(contributing)
+            if raw is None:
+                continue
             processed = _postprocess_ai_causes(raw, contributing)
             if processed is not None:
                 return processed

@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .database import Base, engine
-from .routers import action_records, anomalies, auth
+from .routers import action_records, anomalies, auth, scenario
 
 Base.metadata.create_all(bind=engine)
 
@@ -19,3 +19,4 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(anomalies.router)
 app.include_router(action_records.router)
+app.include_router(scenario.router)

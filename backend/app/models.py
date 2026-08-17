@@ -74,8 +74,7 @@ class Case(Base):
     possible_causes = Column(JSON, nullable=False)
     quality_impact = Column(Text, nullable=False)
     defect_tags = Column(JSON, nullable=False)
-    response = Column(Text, nullable=False)
-    result = Column(Text, nullable=False)
+    responses = Column(JSON, nullable=False)
     manual_text = Column(Text, nullable=False)
 
 
@@ -159,6 +158,11 @@ class RecommendedAction(Base):
     action_name = Column(String, nullable=False)
     description = Column(Text, nullable=False)
     score = Column(Float, nullable=False)
+    variable_name = Column(String, nullable=False)
+    current_value = Column(Float, nullable=False)
+    target_value = Column(Float, nullable=False)
+    unit = Column(String, nullable=False)
+    expected_effect = Column(String, nullable=False)
 
     anomaly_event = relationship("AnomalyEvent", back_populates="recommended_actions")
 

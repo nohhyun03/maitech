@@ -10,8 +10,10 @@ from app.models import (
     Case,
     CauseSummary,
     ProcessData,
+    QualityImpactSummary,
     QualityPrediction,
     RecommendedAction,
+    RecommendedActionSummary,
     Scenario,
     User,
     VariableThreshold,
@@ -86,8 +88,10 @@ CASES = [
         ],
         "수지 점도 ↑ → 패키지 두께 ↑",
         ["패키지 두께 증가"],
-        "히터 출력을 높이고 금형 예열 상태를 재점검",
-        "금형 온도 정상 복귀, 패키지 두께 편차 해소",
+        [
+            {"response": "히터 출력 설정값을 상향 조정하고 금형 예열 사이클을 재실행", "result": "금형 온도 정상 복귀, 패키지 두께 편차 해소"},
+            {"response": "열전대 접촉부를 재체결하고 노후된 히터 소자를 교체", "result": "온도 측정 오차 해소, 금형 온도 안정 유지"},
+        ],
         "금형 온도가 하한 아래로 떨어지면 히터 출력과 예열 상태를 우선 점검한다.",
     ),
     (
@@ -100,8 +104,10 @@ CASES = [
         ],
         "수지 점도 ↓ → 흐름 빨라짐 → Wire sweep 위험 ↑, 온도가 과하게 높아질 시 조기경화 위험성",
         ["Wire sweep 위험", "조기경화 위험"],
-        "히터 출력을 낮추고 냉각 라인을 점검",
-        "10분 내 금형 온도 정상 범위로 복귀, 불량률 영향 없음",
+        [
+            {"response": "히터 출력을 낮추고 냉각 라인을 점검", "result": "10분 내 금형 온도 정상 범위로 복귀, 불량률 영향 없음"},
+            {"response": "온도 제어기 PID 파라미터를 재설정하고 고착된 SSR 릴레이를 교체", "result": "히터 상시 가열 현상 해소, 금형 온도 재상승 없음"},
+        ],
         "금형 온도 초과 시 히터 출력을 낮추고 냉각수 유량을 확인한다.",
     ),
     (
@@ -114,8 +120,10 @@ CASES = [
         ],
         "수지 충진력 ↓ → 미충진 및 Void 위험 ↑",
         ["미충진 위험", "Void 위험"],
-        "사출 압력 설정값을 상향 조정하고 노즐 상태를 점검",
-        "충진력 회복, Void 위험 해소",
+        [
+            {"response": "사출 압력 설정값을 상향 조정하고 노즐 막힘 여부를 점검", "result": "충진력 회복, Void 위험 해소"},
+            {"response": "노즐을 분해 청소하고 마모된 유압 실린더 씰을 교체", "result": "유압 누설 해소, 설정 압력이 그대로 전달됨"},
+        ],
         "사출 압력이 하한 아래로 떨어지면 압력 설정값과 노즐 막힘 여부를 확인한다.",
     ),
     (
@@ -128,8 +136,10 @@ CASES = [
         ],
         "수지 유동력 ↑ → Wire sweep 및 Die shift 위험 ↑, 수지 누출로 단자 덮임 및 설비 파손",
         ["Wire sweep 위험", "Die shift 위험", "단자 덮임/설비 파손"],
-        "사출 압력 설정값을 재조정하고 재료 점도 안정화를 확인한 뒤 정상 운전",
-        "압력 변동 해소, 품질 영향 없음",
+        [
+            {"response": "사출 압력 설정값을 재조정하고 재료 점도 안정화를 확인한 뒤 정상 운전", "result": "압력 변동 해소, 품질 영향 없음"},
+            {"response": "압력 릴리프 밸브를 분해 점검하고 노즐·러너 내 잔류 수지를 제거", "result": "과압 즉시 배출 정상화, 배압 상승 재발 없음"},
+        ],
         "압력이 소폭 초과되면 재료 점도 변화를 먼저 의심하고 압력 설정값을 재조정한다.",
     ),
     (
@@ -142,8 +152,10 @@ CASES = [
         ],
         "수지 부족 → 미충진, 패키지 두께 ↓",
         ["미충진 위험", "패키지 두께 감소"],
-        "수지 카트리지 잔량과 계량 장치 캘리브레이션을 점검",
-        "수지 공급량 정상 복귀, 미충진 위험 해소",
+        [
+            {"response": "수지 카트리지 잔량을 보충하고 계량 장치 영점을 재조정", "result": "수지 공급량 정상 복귀, 미충진 위험 해소"},
+            {"response": "마모된 이송 스크류를 교체하고 계량 로드셀을 재교정", "result": "회전수 대비 이송량 회복, 계량 편차 해소"},
+        ],
         "수지 양이 하한 아래로 떨어지면 카트리지 잔량과 계량 장치를 점검한다.",
     ),
     (
@@ -155,8 +167,10 @@ CASES = [
         ],
         "수지 과다 → Flash, 패키지 두께 ↑",
         ["Flash 위험", "패키지 두께 증가"],
-        "계량 장치를 재조정하고 투입량 설정값을 낮춤",
-        "수지 공급량 정상화, Flash 발생 위험 해소",
+        [
+            {"response": "계량 장치 투입량 설정값을 낮추고 실제 계량값을 재확인", "result": "수지 공급량 정상화, Flash 발생 위험 해소"},
+            {"response": "고착된 계량 밸브를 분해 세척하고 로드셀 드리프트를 보정", "result": "밸브 완전 차단 회복, 과다 투입 재발 없음"},
+        ],
         "수지 양이 상한을 초과하면 계량 장치 설정값을 낮춰 재조정한다.",
     ),
     (
@@ -168,8 +182,10 @@ CASES = [
         ],
         "수지 유동력 ↑ → Wire sweep 위험 ↑",
         ["Wire sweep 위험"],
-        "재료 온도를 안정화하고 점도 저하 원인을 점검",
-        "모터 부하 정상 복귀, Wire sweep 위험 해소",
+        [
+            {"response": "배럴 및 호퍼 히터 설정 온도를 낮추고 재료 온도를 안정화", "result": "모터 부하 정상 복귀, Wire sweep 위험 해소"},
+            {"response": "배럴 내 장시간 체류한 원료를 배출하고 신규 원료로 교체", "result": "원료 열화 해소, 유동성 정상 범위 회복"},
+        ],
         "모터 부하가 하한 아래로 떨어지면 재료 온도와 점도 저하 원인을 점검한다.",
     ),
     (
@@ -182,8 +198,10 @@ CASES = [
         ],
         "수지 유동력 ↓ → 미충진 및 Void 위험 ↑",
         ["미충진 위험", "Void 위험"],
-        "재료 온도를 높이고 재료 상태를 점검",
-        "모터 부하 정상 복귀, 미충진 위험 해소",
+        [
+            {"response": "재료 온도를 상향 조정하고 호퍼 냉각 설정을 완화", "result": "모터 부하 정상 복귀, 미충진 위험 해소"},
+            {"response": "흡습된 원료를 건조 처리하고 마모된 스크류·배럴 간극을 점검", "result": "원료 수분 제거, 이송 저항 정상화"},
+        ],
         "모터 부하가 상한을 초과하면 재료 온도와 재료 상태를 점검한다.",
     ),
     (
@@ -195,8 +213,10 @@ CASES = [
         ],
         "충진 시간 ↑ → 공정 시간 증가 및 경화 전 충진 실패 가능성 ↑",
         ["충진 실패 위험"],
-        "구동부 압력과 밸브 응답 상태를 점검",
-        "RAM 속도 정상 복귀, 충진 시간 안정화",
+        [
+            {"response": "구동부 유압 압력 설정을 상향 조정하고 속도 프로파일을 재확인", "result": "RAM 속도 정상 복귀, 충진 시간 안정화"},
+            {"response": "서보밸브를 세척하고 응답이 지연되는 유량 제어 밸브를 교체", "result": "밸브 응답 지연 해소, 지령 대비 실제 속도 일치"},
+        ],
         "RAM 속도가 하한 아래로 떨어지면 구동부 압력과 밸브 응답을 점검한다.",
     ),
     (
@@ -208,8 +228,10 @@ CASES = [
         ],
         "유동 속도 ↑ → Wire sweep 및 Void 위험 ↑",
         ["Wire sweep 위험", "Void 위험"],
-        "RAM 속도 설정값을 낮추고 구동부를 재점검",
-        "RAM 속도 정상 복귀, Wire sweep 위험 해소",
+        [
+            {"response": "RAM 속도 설정값을 낮추고 속도 프로파일 파라미터를 재입력", "result": "RAM 속도 정상 복귀, Wire sweep 위험 해소"},
+            {"response": "서보밸브 제어 게인을 낮춰 오버슈트를 억제하고 구동부를 재점검", "result": "목표 속도 초과 현상 해소, 유동 속도 안정"},
+        ],
         "RAM 속도가 상한을 초과하면 구동부 설정값을 낮춰 재조정한다.",
     ),
     (
@@ -221,8 +243,10 @@ CASES = [
         ],
         "경화 부족 → 강도/신뢰성 ↓, 패키지 찢어짐이나 Crack 발생 위험 ↑",
         ["강도/신뢰성 저하", "Crack 위험"],
-        "경화 타이머 설정값을 재확인하고 정상값으로 복원",
-        "몰딩 시간 정상 복귀, 경화 부족 위험 해소",
+        [
+            {"response": "경화 타이머 설정값을 규정값으로 복원하고 공정 로그를 확인", "result": "몰딩 시간 정상 복귀, 경화 부족 위험 해소"},
+            {"response": "공정 완료 인터록 센서를 점검하고 오신호가 발생한 배선을 정비", "result": "조기 종료 현상 해소, 경화 시간 안정 확보"},
+        ],
         "몰딩 시간이 하한 아래로 짧아지면 경화 타이머 설정을 재확인한다.",
     ),
     (
@@ -233,9 +257,11 @@ CASES = [
             {"name": "온도 센서 이상에 따른 경화 완료 판정 지연", "mechanism": "온도 센서가 실제 경화 완료 시점보다 늦게 도달 신호를 보내 공정 종료가 지연됨"},
         ],
         "생산 시간 증가 및 과도한 경화 및 열 이력 → 수축 및 Warpage 위험 ↑",
-        ["Warpage 위험"],
-        "경화 타이머 설정값을 낮추고 설비 동작을 점검",
-        "몰딩 시간 정상 복귀, Warpage 위험 해소",
+        ["Warpage 위험", "수축 위험"],
+        [
+            {"response": "경화 타이머 설정값을 낮추고 설비 동작을 점검", "result": "몰딩 시간 정상 복귀, Warpage 위험 해소"},
+            {"response": "경화 완료 판정용 온도 센서를 교정하고 신호 응답 지연을 보정", "result": "공정 종료 지연 해소, 과도한 열 이력 재발 없음"},
+        ],
         "몰딩 시간이 상한을 초과하면 경화 타이머 설정을 낮춰 재조정한다.",
     ),
     (
@@ -247,8 +273,10 @@ CASES = [
         ],
         "냉각 속도 ↓ → 수축 진행 시간 및 작업 시간 ↑",
         ["작업 시간 지연"],
-        "냉각수 유량과 냉각 라인 상태를 점검",
-        "냉각 속도 정상 복귀, 작업 시간 지연 해소",
+        [
+            {"response": "냉각수 유량을 상향 조정하고 냉각 라인 압력을 확인", "result": "냉각 속도 정상 복귀, 작업 시간 지연 해소"},
+            {"response": "냉각 라인 스케일을 세정하고 성능이 저하된 냉각 펌프를 정비", "result": "열교환 효율 회복, 냉각 속도 안정 유지"},
+        ],
         "냉각 속도가 하한 아래로 떨어지면 냉각수 유량과 라인 막힘 여부를 점검한다.",
     ),
     (
@@ -260,8 +288,10 @@ CASES = [
         ],
         "냉각 속도 ↑ → 열응력 및 Warpage, Crack 위험 ↑",
         ["Warpage 위험", "Crack 위험"],
-        "냉각수 유량을 낮추고 냉각 설정값을 재조정",
-        "냉각 속도 정상 복귀, Warpage 위험 해소",
+        [
+            {"response": "냉각수 유량을 낮추고 냉각 프로파일 설정값을 재조정", "result": "냉각 속도 정상 복귀, Warpage 위험 해소"},
+            {"response": "냉각 펌프 출력 설정을 재설정하고 유량 제어 밸브를 점검", "result": "과냉각 현상 해소, 열응력 발생 억제"},
+        ],
         "냉각 속도가 상한을 초과하면 냉각수 유량을 낮춰 재조정한다.",
     ),
     (
@@ -273,8 +303,10 @@ CASES = [
         ],
         "정전기 발생률 ↑ → ESD 위험 ↑",
         ["ESD 위험"],
-        "가습 설비를 가동하고 작업장 밀폐 상태를 점검",
-        "습도 정상 복귀, ESD 위험 해소",
+        [
+            {"response": "가습 설비를 가동하고 급수 잔량을 확인", "result": "습도 정상 복귀, ESD 위험 해소"},
+            {"response": "가습기 필터를 교체하고 출입문·창호 밀폐 상태를 보완", "result": "외기 유입 차단, 습도 편차 해소"},
+        ],
         "습도가 하한 아래로 떨어지면 가습 설비와 밀폐 상태를 점검한다.",
     ),
     (
@@ -286,8 +318,10 @@ CASES = [
         ],
         "패키지가 수분 흡수 → 박리, Crack 위험 ↑",
         ["박리 위험", "Crack 위험"],
-        "제습 설비를 가동하고 공조 필터를 점검",
-        "습도 정상 복귀, 박리 위험 해소",
+        [
+            {"response": "제습 설비를 가동하고 공조 필터를 점검", "result": "습도 정상 복귀, 박리 위험 해소"},
+            {"response": "제습기 냉매를 보충하고 고습 외기 유입 지점을 밀폐 보수", "result": "제습 성능 회복, 습도 재상승 없음"},
+        ],
         "습도가 상한을 초과하면 제습 설비와 공조 필터를 점검한다.",
     ),
     (
@@ -300,13 +334,15 @@ CASES = [
         ],
         "공기 제거 부족, Void 위험 ↑",
         ["Void 위험"],
-        "진공 펌프 상태를 점검하고 타이머 설정값을 복원",
-        "진공 시간 정상 복귀, Void 위험 해소",
+        [
+            {"response": "진공 타이머 설정값을 규정값으로 복원하고 목표 진공도 도달 여부를 확인", "result": "진공 시간 정상 복귀, Void 위험 해소"},
+            {"response": "진공 펌프 오일을 교환하고 노후된 챔버 도어 가스켓을 교체", "result": "미세 누기 해소, 목표 진공도 도달 시간 단축"},
+        ],
         "진공 시간이 하한 아래로 짧아지면 진공 펌프와 타이머 설정을 점검한다.",
     ),
 ]
 
-for category, direction, situation, possible_causes, quality_impact, defect_tags, response, result, manual_text in CASES:
+for category, direction, situation, possible_causes, quality_impact, defect_tags, responses, manual_text in CASES:
     existing = db.query(Case).filter(Case.category == category, Case.direction == direction).first()
     if existing is None:
         db.add(
@@ -317,8 +353,7 @@ for category, direction, situation, possible_causes, quality_impact, defect_tags
                 possible_causes=possible_causes,
                 quality_impact=quality_impact,
                 defect_tags=defect_tags,
-                response=response,
-                result=result,
+                responses=responses,
                 manual_text=manual_text,
             )
         )
@@ -327,8 +362,7 @@ for category, direction, situation, possible_causes, quality_impact, defect_tags
         existing.possible_causes = possible_causes
         existing.quality_impact = quality_impact
         existing.defect_tags = defect_tags
-        existing.response = response
-        existing.result = result
+        existing.responses = responses
         existing.manual_text = manual_text
 
 db.commit()
@@ -341,7 +375,9 @@ if existing_scenario is not None:
     if event_ids:
         db.query(ActionRecord).filter(ActionRecord.anomaly_event_id.in_(event_ids)).delete(synchronize_session=False)
         db.query(RecommendedAction).filter(RecommendedAction.anomaly_event_id.in_(event_ids)).delete(synchronize_session=False)
+        db.query(RecommendedActionSummary).filter(RecommendedActionSummary.anomaly_event_id.in_(event_ids)).delete(synchronize_session=False)
         db.query(QualityPrediction).filter(QualityPrediction.anomaly_event_id.in_(event_ids)).delete(synchronize_session=False)
+        db.query(QualityImpactSummary).filter(QualityImpactSummary.anomaly_event_id.in_(event_ids)).delete(synchronize_session=False)
         db.query(CauseSummary).filter(CauseSummary.anomaly_event_id.in_(event_ids)).delete(synchronize_session=False)
     db.query(AnomalyEvent).filter(AnomalyEvent.scenario_id == existing_scenario.id).delete()
     db.query(ProcessData).filter(ProcessData.scenario_id == existing_scenario.id).delete()

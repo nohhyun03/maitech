@@ -65,6 +65,26 @@ function confirmActionRecord(id) {
   return apiPost(`/api/action-records/${id}/confirm`);
 }
 
+function getScenarioStatus() {
+  return apiGet('/api/scenario/status');
+}
+
+function startScenario() {
+  return apiPost('/api/scenario/start');
+}
+
+function restartScenario() {
+  return apiPost('/api/scenario/restart');
+}
+
+function pauseScenario() {
+  return apiPost('/api/scenario/pause');
+}
+
+function resumeScenario() {
+  return apiPost('/api/scenario/resume');
+}
+
 function formatDateTime(isoString) {
   const d = new Date(isoString);
   const pad = (n) => String(n).padStart(2, '0');

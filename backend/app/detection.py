@@ -10,6 +10,10 @@ from .rules import compute_score, grade_from_score
 _last_processed = {}
 
 
+def reset_watermark(scenario_id: int):
+    _last_processed.pop(scenario_id, None)
+
+
 def _open_event(db: Session, scenario_id: int, process_name: str):
     return (
         db.query(AnomalyEvent)

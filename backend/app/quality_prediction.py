@@ -11,6 +11,8 @@ def _total_score(event: AnomalyEvent, exclude_variable: str = None) -> float:
 
 
 def _defect_probability(total_score: float, duration_minutes: float) -> float:
+    if total_score <= 0:
+        return 0.0
     raw = total_score * SCORE_WEIGHT + duration_minutes * DURATION_WEIGHT
     return max(0.0, min(100.0, raw))
 

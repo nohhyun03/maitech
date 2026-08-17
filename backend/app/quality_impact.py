@@ -36,16 +36,30 @@ def _fallback_impacts(contributing: list[dict]) -> list[dict]:
     return impacts
 
 
+def _allowed_labels(contributing: list[dict]) -> set:
+    labels = set()
+    for v in contributing:
+        if v["case"] is not None:
+            labels.update(v["case"].defect_tags)
+    return labels
+
+
 def _postprocess_ai_impacts(raw_impacts: list, contributing: list[dict]):
     valid_names = {v["variable_name"] for v in contributing}
+    allowed_labels = _allowed_labels(contributing)
 
+    considered = raw_impacts[: min(MAX_IMPACTS, len(allowed_labels))]
     results = []
-    for item in raw_impacts[:MAX_IMPACTS]:
+    used_labels = set()
+    for item in considered:
         label = item.get("label")
         description = item.get("description")
         related = [name for name in item.get("related_variables", []) if name in valid_names]
         if not label or not description or not related:
             continue
+        if label not in allowed_labels or label in used_labels:
+            continue
+        used_labels.add(label)
 
         likelihood_pct = item.get("likelihood_pct")
         if not isinstance(likelihood_pct, (int, float)):
@@ -61,7 +75,7 @@ def _postprocess_ai_impacts(raw_impacts: list, contributing: list[dict]):
             }
         )
 
-    if not results:
+    if len(results) < min(2, len(allowed_labels)) or len(results) != len(considered):
         return None
 
     results.sort(key=lambda i: i["likelihood_pct"], reverse=True)
@@ -70,8 +84,10 @@ def _postprocess_ai_impacts(raw_impacts: list, contributing: list[dict]):
 
 def _generate_impacts(contributing: list[dict]) -> list[dict]:
     if contributing:
-        raw = generate_quality_impacts(contributing)
-        if raw is not None:
+        for _ in range(2):
+            raw = generate_quality_impacts(contributing)
+            if raw is None:
+                continue
             processed = _postprocess_ai_impacts(raw, contributing)
             if processed is not None:
                 return processed

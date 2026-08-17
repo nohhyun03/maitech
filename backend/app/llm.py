@@ -1,5 +1,7 @@
 import json
 import os
+import sys
+import traceback
 
 from dotenv import load_dotenv
 from google import genai
@@ -13,6 +15,28 @@ _api_key = os.getenv("GEMINI_API_KEY")
 _client = genai.Client(api_key=_api_key) if _api_key else None
 
 
+def _request_items(prompt: str, key: str):
+    try:
+        response = _client.models.generate_content(
+            model=MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                temperature=0.3,
+            ),
+        )
+        data = json.loads(response.text, strict=False)
+        items = data if isinstance(data, list) else data.get(key)
+        if not items or not isinstance(items, list):
+            print(f"[llm] {key}: unexpected response shape {type(data).__name__}", file=sys.stderr)
+            return None
+        print(f"[llm] {key}: {len(items)} items", file=sys.stderr)
+        return items
+    except Exception:
+        traceback.print_exc(file=sys.stderr)
+        return None
+
+
 def generate_holistic_causes(contributing: list[dict]):
     if _client is None:
         return None
@@ -22,7 +46,8 @@ def generate_holistic_causes(contributing: list[dict]):
         case = v["case"]
         if case is not None:
             causes_text = " / ".join(f"{c['name']}({c['mechanism']})" for c in case.possible_causes)
-            case_context = f"유사 사례 - 상황: {case.situation} / 알려진 원인 후보: {causes_text} / 결과: {case.result}"
+            results_text = " / ".join(r["result"] for r in case.responses)
+            case_context = f"유사 사례 - 상황: {case.situation} / 알려진 원인 후보: {causes_text} / 조치 결과: {results_text}"
         else:
             case_context = "일치하는 과거 사례 없음"
         variable_lines.append(
@@ -83,22 +108,7 @@ def generate_holistic_causes(contributing: list[dict]):
         "related_variables는 반드시 위 목록에 나열된 변수명 중에서만 골라야 하고, 각 원인마다 최소 1개는 있어야 해."
     )
 
-    try:
-        response = _client.models.generate_content(
-            model=MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                temperature=0.3,
-            ),
-        )
-        data = json.loads(response.text)
-        causes = data.get("causes")
-        if not causes or not isinstance(causes, list):
-            return None
-        return causes
-    except Exception:
-        return None
+    return _request_items(prompt, "causes")
 
 
 def generate_quality_impacts(contributing: list[dict]):
@@ -106,47 +116,43 @@ def generate_quality_impacts(contributing: list[dict]):
         return None
 
     variable_lines = []
+    allowed_labels = []
     for v in contributing:
         case = v["case"]
         impact_text = case.quality_impact if case is not None else "알려진 품질 영향 정보 없음"
+        tags = list(case.defect_tags) if case is not None else []
+        for tag in tags:
+            if tag not in allowed_labels:
+                allowed_labels.append(tag)
+        tag_text = ", ".join(tags) if tags else "없음"
         variable_lines.append(
             f"- {v['variable_name']}: 기준값 대비 {v['direction']}, 기여도 {v['contribution_pct']:.1f}%. "
-            f"CSV 기준 품질 영향: {impact_text}"
+            f"알려진 품질 영향: {impact_text} / 이 변수에 정의된 불량 유형: {tag_text}"
         )
 
     prompt = (
-        "다음은 제조 공정에서 동시에 발생한 이상 변수 목록과, 각 변수가 기준치를 벗어났을 때 CSV에 정의된 품질 영향 설명이야.\n\n"
+        "다음은 제조 공정에서 동시에 발생한 이상 변수 목록과, 각 변수가 기준치를 벗어났을 때 알려진 품질 영향이야.\n\n"
         + "\n".join(variable_lines)
-        + "\n\n이 정보들을 종합적으로 분석해서, 지금 이 조합이 실제로 이어질 가능성이 가장 높은 품질/불량 이슈를 정확히 3개 골라 "
-        "가능성이 높은 순서로 순위를 매겨줘. 하나의 변수만으로 설명되는 이슈일 수도 있고, 여러 변수의 CSV 품질 영향 설명이 "
-        "같은 이슈를 함께 가리키는 경우 그 변수들의 기여도를 종합해서 더 유력한 이슈로 판단할 수도 있어. "
-        "라벨(label)은 위 CSV 품질 영향 설명에 나온 용어(예: Wire sweep 위험, Die shift 위험, Void 위험, Flash, Crack, Warpage 등)를 "
-        "그대로 사용하고, 새로 지어내지 마.\n\n"
+        + "\n\n이 정보들을 종합적으로 분석해서, 지금 이 조합이 실제로 이어질 가능성이 가장 높은 품질/불량 이슈를 "
+        "가능성이 높은 순서로 최대 3개까지 골라 순위를 매겨줘. 하나의 변수만으로 설명되는 이슈일 수도 있고, 여러 변수의 품질 영향이 "
+        "같은 이슈를 함께 가리키는 경우 그 변수들의 기여도를 종합해서 더 유력한 이슈로 판단할 수도 있어.\n\n"
+        "label은 반드시 다음 목록에 있는 문자열 중 하나를 글자 하나 바꾸지 않고 그대로 써야 해: "
+        + " | ".join(allowed_labels)
+        + "\n이 목록에 없는 표현을 새로 만들거나, 설명 문장의 일부를 잘라내서 라벨로 쓰면 안 돼. "
+        "같은 라벨을 두 번 쓰지도 마. 목록에 후보가 3개보다 적으면 있는 개수만큼만 응답해.\n\n"
         "각 이슈마다 그 이슈가 발생할 가능성(likelihood_pct, 0~100 사이 숫자)을 후보 간 비교를 근거로 직접 판단해서 매겨줘. "
         "1순위 > 2순위 > 3순위 순으로 감소해야 해.\n\n"
-        "description은 2~3문장으로 써서, 어떤 변수(들)의 기여도와 CSV 품질 영향 설명을 근거로 이 이슈를 예상했는지 구체적으로 밝혀.\n\n"
+        "description은 2~3문장으로 써서, 어떤 변수의 어떤 이상이 어떤 물리적 과정을 거쳐 이 이슈로 이어지는지를 설명해. "
+        "매우 중요: 데이터의 출처를 언급하면 안 돼. \"CSV에 따르면\", \"CSV 기준 품질 영향에 명시되어 있다\", "
+        "\"데이터에 정의된 바와 같이\" 같은 표현은 절대 쓰지 마. 작업자에게 공정 현상을 설명하듯 자연스럽게 써. "
+        "모든 문장은 \"~니다\"로 끝나는 존댓말로 써야 해. \"~된다\", \"~한다\", \"~이다\" 같은 평서체로 끝내면 안 돼.\n\n"
         "다음 JSON 형식으로만 응답해: "
-        '{"impacts": [{"label": "CSV 용어 그대로", "description": "근거를 포함한 2~3문장", '
+        '{"impacts": [{"label": "허용 목록의 라벨 그대로", "description": "물리적 과정을 설명하는 2~3문장", '
         '"related_variables": ["관련된 변수명"], "likelihood_pct": 0}]}\n'
         "related_variables는 반드시 위 목록에 나열된 변수명 중에서만 골라야 하고, 각 이슈마다 최소 1개는 있어야 해."
     )
 
-    try:
-        response = _client.models.generate_content(
-            model=MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                temperature=0.3,
-            ),
-        )
-        data = json.loads(response.text)
-        impacts = data.get("impacts")
-        if not impacts or not isinstance(impacts, list):
-            return None
-        return impacts
-    except Exception:
-        return None
+    return _request_items(prompt, "impacts")
 
 
 def generate_recommended_actions(entries: list[dict]):
@@ -155,45 +161,35 @@ def generate_recommended_actions(entries: list[dict]):
 
     entry_lines = []
     for i, e in enumerate(entries):
+        cause_text = ", ".join(e["cause_names"]) if e["cause_names"] else "관련 원인 미확인"
         past_action_text = (
-            f"과거 실제 조치: {e['response']} / 조치 결과: {e['result']}"
+            f"과거 실제 조치: {e['response']} / 그때의 결과: {e['result']}"
             if e["response"] is not None
             else "일치하는 과거 조치 사례 없음"
         )
         entry_lines.append(
-            f"[{i}] 원인: {e['cause_name']} (가능성 {e['likelihood_pct']:.1f}%). {past_action_text}"
+            f"[{i}] 대상 변수: {e['variable_name']} (기준값 대비 {e['direction']}, 기여도 {e['contribution_pct']:.1f}%) / "
+            f"이 변수와 관련해 진단된 원인: {cause_text} / {past_action_text}"
         )
 
     prompt = (
-        "다음은 이번 이상 건에 대해 AI가 이미 판단한 원인 후보들과, 각 원인에 대응했던 과거 실제 조치 사례야.\n\n"
+        "다음은 이번 이상 건에서 조치가 필요한 항목들과, 과거에 같은 증상에 대해 숙련자가 실제로 수행했던 조치 기록이야.\n\n"
         + "\n".join(entry_lines)
-        + "\n\n작업자는 이 조치들을 하나만 골라 수행하는 게 아니라, 아래에서 정할 우선순위 순서대로 전부 차례차례 수행하는 것이 "
-        "기본 대응 방식이야. 위 원인들의 가능성을 종합적으로 비교해서 각 조치에 \"즉시\", \"30분 이내\", \"순차 처리\" 중 "
-        "하나씩 우선순위를 배정해줘. 원인이 3개면 세 등급을 정확히 하나씩만 써야 하고, 그보다 적으면 있는 개수만큼 "
-        "높은 등급부터 순서대로 배정해.\n\n"
+        + "\n\n작업자는 이 조치들 중 하나를 골라 수행하는 게 아니야. 먼저 1번 조치를 해보고 그것으로 해결되지 않으면 "
+        "다음 조치를 시도하는 식으로, 아래에서 정할 순서대로 차례차례 수행하는 것이 기본 대응 방식이야.\n\n"
+        "이 점을 감안해서 각 항목에 \"즉시\", \"30분 이내\", \"순차 처리\" 중 하나씩 순서를 배정해줘. "
+        "같은 변수에 대한 조치가 여러 개 있으면, 설정값 조정이나 소모품 보충처럼 빠르고 되돌리기 쉬운 조치를 먼저 두고, "
+        "부품 교체나 분해 정비처럼 시간과 비용이 큰 근본 조치를 뒤에 둬. "
+        "서로 다른 변수에 대한 조치라면 기여도가 높아 영향이 큰 변수를 먼저 처리하도록 배정해. "
+        "항목이 3개면 세 등급을 정확히 하나씩만 쓰고, 그보다 적으면 있는 개수만큼 높은 등급부터 순서대로 배정해.\n\n"
         "각 조치의 description은 작업자에게 지시하는 명령형 어조로 써(\"~하십시오\", \"~점검하십시오\", \"~확인하십시오\"). "
-        "원인의 발생 메커니즘을 다시 설명하지 말고(그건 이미 다른 화면에 나와 있어), 과거 실제 조치 내용을 근거로 "
-        "지금 무엇을 점검·조정해야 하는지 구체적으로 지시한 뒤, 과거 조치 결과를 근거로 어떤 상태가 되면 정상화된 것으로 "
-        "볼 수 있는지 확인 기준을 함께 제시해. 2~3문장으로 써. 과거 조치 사례가 없는 원인이라면 원인명을 근거로 "
-        "일반적인 점검 지시를 명령형으로 써.\n\n"
+        "원인의 발생 메커니즘을 다시 설명하지 말고(그건 이미 다른 화면에 나와 있어), 위에 주어진 과거 실제 조치 내용을 근거로 "
+        "지금 무엇을 점검·조정해야 하는지 구체적으로 지시한 뒤, 그때의 결과를 근거로 어떤 상태가 되면 정상화된 것으로 "
+        "볼 수 있는지 확인 기준을 함께 제시해. 2~3문장으로 써. "
+        "과거 조치 사례가 없는 항목이라면 진단된 원인명을 근거로 일반적인 점검 지시를 명령형으로 써.\n\n"
         "다음 JSON 형식으로만 응답해: "
-        '{"actions": [{"cause_index": 0, "priority": "즉시", "description": "명령형 지시 2~3문장"}]}\n'
-        "cause_index는 위 목록의 대괄호 번호와 정확히 일치해야 하고, 모든 원인에 대해 하나씩 빠짐없이 응답해."
+        '{"actions": [{"action_index": 0, "priority": "즉시", "description": "명령형 지시 2~3문장"}]}\n'
+        "action_index는 위 목록의 대괄호 번호와 정확히 일치해야 하고, 모든 항목에 대해 하나씩 빠짐없이 응답해."
     )
 
-    try:
-        response = _client.models.generate_content(
-            model=MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                temperature=0.3,
-            ),
-        )
-        data = json.loads(response.text)
-        actions = data.get("actions")
-        if not actions or not isinstance(actions, list):
-            return None
-        return actions
-    except Exception:
-        return None
+    return _request_items(prompt, "actions")
