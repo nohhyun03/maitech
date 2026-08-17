@@ -95,6 +95,7 @@ class AnomalyEvent(Base):
 
     scenario = relationship("Scenario", back_populates="anomaly_events")
     cause_summary = relationship("CauseSummary", back_populates="anomaly_event", uselist=False)
+    quality_impact_summary = relationship("QualityImpactSummary", back_populates="anomaly_event", uselist=False)
     quality_predictions = relationship("QualityPrediction", back_populates="anomaly_event")
     recommended_actions = relationship("RecommendedAction", back_populates="anomaly_event")
     action_records = relationship("ActionRecord", back_populates="anomaly_event")
@@ -109,6 +110,17 @@ class CauseSummary(Base):
     causes = Column(JSON, nullable=False)
 
     anomaly_event = relationship("AnomalyEvent", back_populates="cause_summary")
+
+
+class QualityImpactSummary(Base):
+    __tablename__ = "quality_impact_summaries"
+
+    id = Column(Integer, primary_key=True)
+    anomaly_event_id = Column(String, ForeignKey("anomaly_events.id"), nullable=False, unique=True)
+    variable_signature = Column(String, nullable=False)
+    impacts = Column(JSON, nullable=False)
+
+    anomaly_event = relationship("AnomalyEvent", back_populates="quality_impact_summary")
 
 
 class QualityPrediction(Base):

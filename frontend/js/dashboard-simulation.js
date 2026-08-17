@@ -41,22 +41,37 @@ function renderActions(actions) {
   `).join('');
 }
 
+let impactLoadingTimer = null;
+
+function showImpactLoading() {
+  impactLoadingTimer = setTimeout(() => {
+    document.getElementById('impactStatus').textContent = 'AI 분석 중...';
+  }, 400);
+}
+
+function hideImpactLoading() {
+  clearTimeout(impactLoadingTimer);
+  document.getElementById('impactStatus').textContent = '';
+}
+
 async function load() {
   await startAction(anomalyId);
 
   document.getElementById('actionRecordLink').href = `action-record?id=${anomalyId}`;
 
-  const [prediction, impact, actions] = await Promise.all([
+  const [prediction, actions] = await Promise.all([
     getQualityPrediction(anomalyId),
-    getQualityImpact(anomalyId),
     getRecommendedActions(anomalyId),
   ]);
 
   document.getElementById('confidenceLine').textContent = `예측 신뢰도: ${prediction.confidence_pct.toFixed(1)}%`;
-  renderImpact(impact);
   renderSimTable(actions);
   renderActions(actions);
+
+  showImpactLoading();
+  const impact = await getQualityImpact(anomalyId);
+  hideImpactLoading();
+  renderImpact(impact);
 }
 
 load();
-setInterval(load, 3000);

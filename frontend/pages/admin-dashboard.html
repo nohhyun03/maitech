@@ -10,10 +10,11 @@
 </head>
 <body></body>
 <script src="../js/shell.js"></script>
+<script src="../js/api.js"></script>
 <script>
 renderAppShell({
   active: 'admin',
-  role: 'manager',
+  role: (getCurrentUser() || {}).role || 'worker',
   mainHtml: `
     <div class="section-title">
       관리자 현황 확인
@@ -58,6 +59,5 @@ renderAppShell({
   `,
 });
 </script>
-<script src="../js/api.js"></script>
 <script src="../js/admin-dashboard.js"></script>
 </html>
