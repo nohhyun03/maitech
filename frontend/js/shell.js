@@ -89,7 +89,12 @@ function renderAppShell({ active, role, mainHtml }) {
             <input type="text" placeholder="검색">
           </div>
           <div class="scenario-control" id="scenarioControl"></div>
-          <div class="profile-icon"><img src="../images/icon-profile.png" alt="프로필"></div>
+          <div class="profile-menu">
+            <button type="button" class="profile-icon" id="profileMenuBtn"><img src="../images/icon-profile.png" alt="프로필"></button>
+            <div class="profile-dropdown" id="profileDropdown">
+              <button type="button" id="logoutBtn">로그아웃</button>
+            </div>
+          </div>
         </div>
       </header>
       <div class="app-body">
@@ -100,4 +105,24 @@ function renderAppShell({ active, role, mainHtml }) {
   `;
 
   getScenarioStatus().then(renderScenarioControl);
+  setupProfileMenu();
+}
+
+function setupProfileMenu() {
+  const btn = document.getElementById('profileMenuBtn');
+  const dropdown = document.getElementById('profileDropdown');
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdown.classList.toggle('open');
+  });
+
+  document.addEventListener('click', () => {
+    dropdown.classList.remove('open');
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    sessionStorage.removeItem('maitech_user');
+    window.location.href = '../index.html';
+  });
 }
