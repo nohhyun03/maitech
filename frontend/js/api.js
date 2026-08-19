@@ -1,4 +1,6 @@
-const API_BASE = 'http://localhost:8000';
+const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+  ? 'http://localhost:8000'
+  : `http://${location.hostname}:8000`;
 
 function getCurrentUser() {
   const raw = sessionStorage.getItem('maitech_user');
