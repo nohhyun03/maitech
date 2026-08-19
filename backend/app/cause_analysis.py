@@ -11,7 +11,7 @@ MAX_AI_CAUSES = 3
 
 
 def direction_of(value: float, threshold: VariableThreshold) -> str:
-    return "초과" if value > threshold.golden_value else "미만"
+    return "초과" if value > threshold.golden_upper else "미만"
 
 
 def match_case(db: Session, variable_name: str, direction: str):
@@ -69,7 +69,7 @@ def compute_variable_causes(db: Session, event: AnomalyEvent) -> list[dict]:
                 "contribution_pct": 0.0,
                 "direction": None,
                 "case": None,
-                "current_value": latest.value if latest else threshold.golden_value,
+                "current_value": latest.value if latest else (threshold.golden_lower + threshold.golden_upper) / 2,
                 "threshold": threshold,
             }
         )

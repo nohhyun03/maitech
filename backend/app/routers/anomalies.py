@@ -21,7 +21,8 @@ def _enrich_variable(v: dict, thresholds: dict) -> dict:
         **v,
         "grade": grade_from_score(v["score"]),
         "direction": direction_of(v["value"], threshold) if threshold else None,
-        "golden_value": threshold.golden_value if threshold else None,
+        "golden_lower": threshold.golden_lower if threshold else None,
+        "golden_upper": threshold.golden_upper if threshold else None,
         "lower_bound": threshold.lower_bound if threshold else None,
         "upper_bound": threshold.upper_bound if threshold else None,
         "unit": threshold.unit if threshold else None,
@@ -55,9 +56,12 @@ def _variables_response(all_variables: list[dict]) -> list[dict]:
             "variable_name": v["variable_name"],
             "contribution_pct": v["contribution_pct"],
             "current_value": v["current_value"],
-            "golden_value": v["threshold"].golden_value if v["threshold"] else None,
+            "golden_lower": v["threshold"].golden_lower if v["threshold"] else None,
+            "golden_upper": v["threshold"].golden_upper if v["threshold"] else None,
             "lower_bound": v["threshold"].lower_bound if v["threshold"] else None,
             "upper_bound": v["threshold"].upper_bound if v["threshold"] else None,
+            "critical_lower_enabled": v["threshold"].critical_lower_enabled if v["threshold"] else None,
+            "critical_upper_enabled": v["threshold"].critical_upper_enabled if v["threshold"] else None,
             "unit": v["threshold"].unit if v["threshold"] else None,
         }
         for v in all_variables

@@ -30,15 +30,19 @@ function renderMetrics(event, prediction) {
 }
 
 function renderCauseTable(causes) {
-  document.getElementById('causeTableBody').innerHTML = causes.map((c) => `
+  document.getElementById('causeTableBody').innerHTML = causes.map((c) => {
+    const lowerText = c.critical_lower_enabled === false ? '제한없음' : c.lower_bound ?? '-';
+    const upperText = c.critical_upper_enabled === false ? '제한없음' : c.upper_bound ?? '-';
+    return `
     <tr>
       <td>${c.variable_name}${c.unit ? ` (${c.unit})` : ''}</td>
       <td>${c.contribution_pct === 0 ? '0' : c.contribution_pct.toFixed(1)}%</td>
       <td>${c.current_value ?? '-'}</td>
-      <td>${c.golden_value ?? '-'}</td>
-      <td>${c.lower_bound ?? '-'}~${c.upper_bound ?? '-'}</td>
+      <td>${c.golden_lower ?? '-'}~${c.golden_upper ?? '-'}</td>
+      <td>${lowerText}~${upperText}</td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function renderCauseList(causes) {

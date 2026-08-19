@@ -191,7 +191,7 @@ def _recommend_actions_once(db: Session, anomaly_event_id: str):
             score=var["contribution_pct"],
             variable_name=var["variable_name"],
             current_value=var["current_value"],
-            target_value=threshold.golden_value,
+            target_value=threshold.golden_upper if var["direction"] == "초과" else threshold.golden_lower,
             unit=threshold.unit,
             expected_effect=_expected_effect(
                 current_pct, defect_probability_excluding(event, var["variable_name"])

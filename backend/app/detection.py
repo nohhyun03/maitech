@@ -75,10 +75,16 @@ def run_detection(db: Session):
         threshold = thresholds.get(row.variable_name)
         if threshold is None:
             continue
-        if not threshold.check_upper and row.value > threshold.upper_bound:
-            continue
 
-        score = compute_score(row.value, threshold.golden_value, threshold.lower_bound, threshold.upper_bound)
+        score = compute_score(
+            row.value,
+            threshold.golden_lower,
+            threshold.golden_upper,
+            threshold.lower_bound,
+            threshold.upper_bound,
+            threshold.critical_lower_enabled,
+            threshold.critical_upper_enabled,
+        )
         candidate_key = (scenario_id, row.process_name, row.variable_name)
         if score <= 0:
             _candidate_onset.pop(candidate_key, None)

@@ -57,10 +57,12 @@ class VariableThreshold(Base):
 
     id = Column(Integer, primary_key=True)
     variable_name = Column(String, unique=True, nullable=False)
-    golden_value = Column(Float, nullable=False)
+    golden_lower = Column(Float, nullable=False)
+    golden_upper = Column(Float, nullable=False)
     lower_bound = Column(Float, nullable=False)
     upper_bound = Column(Float, nullable=False)
-    check_upper = Column(Boolean, nullable=False, default=True)
+    critical_lower_enabled = Column(Boolean, nullable=False, default=True)
+    critical_upper_enabled = Column(Boolean, nullable=False, default=True)
     unit = Column(String, nullable=False)
 
 
