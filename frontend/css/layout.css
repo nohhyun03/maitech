@@ -410,6 +410,27 @@
   margin-bottom: 0;
 }
 
+.action-list-hint {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.cause-item[data-rank] {
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.cause-item[data-rank]:hover {
+  border-color: #1f3fc3;
+  background: rgba(31, 63, 195, 0.03);
+}
+
+.cause-item.selected {
+  border-color: #1f3fc3;
+  background: rgba(31, 63, 195, 0.05);
+}
+
 .cause-item .cause-rank {
   display: flex;
   gap: 16px;

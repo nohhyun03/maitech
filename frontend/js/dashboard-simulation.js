@@ -1,4 +1,5 @@
 const anomalyId = new URLSearchParams(window.location.search).get('id');
+let selectedUpTo = 0;
 
 function renderImpact(impacts) {
   document.getElementById('impactGrid').innerHTML = impacts.map((impact) => `
@@ -33,10 +34,17 @@ function renderSimTable(actions) {
   `).join('');
 }
 
+function updateActionRecordLink() {
+  const link = document.getElementById('actionRecordLink');
+  link.href = selectedUpTo > 0
+    ? `action-record?id=${anomalyId}&upto=${selectedUpTo}`
+    : `action-record?id=${anomalyId}`;
+}
+
 function renderActions(actions) {
   const list = document.getElementById('actionList');
   list.innerHTML = actions.map((a) => `
-    <div class="cause-item">
+    <div class="cause-item${a.rank <= selectedUpTo ? ' selected' : ''}" data-rank="${a.rank}">
       <div class="cause-rank">
         <span>조치${a.rank}</span>
         <span>${a.priority}</span>
@@ -45,6 +53,15 @@ function renderActions(actions) {
       <div class="cause-desc">${a.description}</div>
     </div>
   `).join('');
+
+  list.querySelectorAll('.cause-item').forEach((el) => {
+    el.addEventListener('click', () => {
+      const rank = Number(el.dataset.rank);
+      selectedUpTo = selectedUpTo === rank ? 0 : rank;
+      renderActions(actions);
+      updateActionRecordLink();
+    });
+  });
 }
 
 function renderActionsLoading() {

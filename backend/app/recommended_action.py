@@ -10,7 +10,7 @@ from .quality_prediction import _defect_probability, _total_score, defect_probab
 
 MAX_ACTIONS = 3
 
-PRIORITY_LEVELS = ["즉시", "30분 이내", "순차 처리"]
+PRIORITY_LEVELS = ["우선 시도", "차순위 시도", "최종 시도"]
 PRIORITY_ORDER = {p: i for i, p in enumerate(PRIORITY_LEVELS)}
 
 
@@ -178,9 +178,9 @@ def _recommend_actions_once(db: Session, anomaly_event_id: str):
         if response is not None:
             action_name = response["response"]
         elif cause_names:
-            action_name = f"{cause_names[0]} 관련 대응 방법 검토 필요"
+            action_name = f"{cause_names[0]} 관련 대응 방안 검토"
         else:
-            action_name = f"{var['variable_name']} 이상 대응 방법 검토 필요"
+            action_name = f"{var['variable_name']} 이상 대응 방안 검토"
 
         action = RecommendedAction(
             anomaly_event_id=anomaly_event_id,

@@ -1,4 +1,26 @@
-const anomalyId = new URLSearchParams(window.location.search).get('id');
+const searchParams = new URLSearchParams(window.location.search);
+const anomalyId = searchParams.get('id');
+const selectedUpTo = Number(searchParams.get('upto')) || 0;
+
+function buildActionContent(actions) {
+  const sorted = [...actions].sort((a, b) => a.rank - b.rank);
+  const taken = selectedUpTo > 0 ? sorted.filter((a) => a.rank <= selectedUpTo) : sorted;
+
+  if (taken.length === 1) {
+    return `${taken[0].action_name} 시행하여 정상화 확인됨.`;
+  }
+
+  const parts = taken.slice(0, -1).map((a, i) => {
+    const lead = i === 0 ? '먼저' : '이어서';
+    const outcome = i === 0 ? '해결되지 않아' : '역시 해결되지 않아';
+    return `${lead} ${a.action_name} 시행하였으나 ${outcome}`;
+  });
+  const last = taken[taken.length - 1];
+  const closing = taken.length > 2 ? '최종적으로' : '';
+  parts.push(`${closing} ${last.action_name} 시행하여 해결함`.trim());
+
+  return `${parts.join(' ')}.`;
+}
 const consentCheckbox = document.getElementById('consentCheckbox');
 const submitBtn = document.getElementById('submitBtn');
 const actionContent = document.getElementById('actionContent');
@@ -53,9 +75,7 @@ async function load() {
   document.getElementById('previewText').textContent =
     `[${event.id}] ${event.process_name} 이상 대응 조치 기록이 등록되었습니다. 조치 내용과 결과가 포함되며, 관리자는 이상 상세 화면에서 전체 기록을 확인할 수 있습니다.`;
 
-  actionContent.value = actions
-    .map((a) => `조치${a.rank}(${a.priority}): ${a.action_name} 수행함.`)
-    .join('\n');
+  actionContent.value = buildActionContent(actions);
 }
 
 load();
