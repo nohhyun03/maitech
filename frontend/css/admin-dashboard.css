@@ -53,8 +53,8 @@
 }
 
 .record-detail-scroll {
-  min-height: 360px;
-  max-height: 360px;
+  min-height: 240px;
+  max-height: 560px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -198,4 +198,49 @@
   font-size: 13px;
   border-radius: 999px;
   white-space: nowrap;
+}
+
+.chip-editable {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chip-text {
+  cursor: pointer;
+}
+
+.chip-remove {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.chip-remove:hover {
+  color: #d93025;
+}
+
+.chip-add {
+  cursor: pointer;
+  border-style: dashed;
+  color: #666;
+  background: transparent;
+}
+
+.chip-add:hover {
+  border-color: #1f3fc3;
+  color: #1f3fc3;
+}
+
+.chip-input {
+  font-family: inherit;
+  font-size: 13px;
+  border: 1px solid #1f3fc3;
+  border-radius: 999px;
+  padding: 4px 12px;
+  width: 120px;
 }

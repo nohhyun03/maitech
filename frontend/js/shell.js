@@ -57,6 +57,7 @@ function renderScenarioControl(status) {
     renderScenarioControl(await resumeScenario());
   });
   document.getElementById('scenarioRestartBtn').addEventListener('click', async () => {
+    localStorage.removeItem('maitech_variable_items');
     renderScenarioControl(await restartScenario());
   });
 

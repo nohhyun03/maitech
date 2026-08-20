@@ -1,4 +1,6 @@
-const VARIABLE_ITEMS = [
+const VARIABLE_STORAGE_KEY = 'maitech_variable_items';
+
+const DEFAULT_VARIABLE_ITEMS = [
   {
     process: '패키징 공정',
     variables: ['금형 온도', '사출 압력', '수지 양', '수지 점도 (모터 부하)', '유량 (RAM 속도)', '몰딩 시간', '냉각 속도', '작업장 습도', '진공 시간'],
@@ -12,6 +14,22 @@ const VARIABLE_ITEMS = [
     variables: ['와이어 장력', '초음파 출력', '루프 높이', '본딩 온도', '본딩 시간'],
   },
 ];
+
+function loadVariableItems() {
+  const raw = localStorage.getItem(VARIABLE_STORAGE_KEY);
+  if (!raw) return JSON.parse(JSON.stringify(DEFAULT_VARIABLE_ITEMS));
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return JSON.parse(JSON.stringify(DEFAULT_VARIABLE_ITEMS));
+  }
+}
+
+function saveVariableItems() {
+  localStorage.setItem(VARIABLE_STORAGE_KEY, JSON.stringify(variableItems));
+}
+
+let variableItems = loadVariableItems();
 
 function statusClass(status) {
   if (status === '미확인') return 'status-unchecked';
@@ -108,13 +126,83 @@ function renderRecordDetail(event, record) {
 
 function renderVariableList() {
   const list = document.getElementById('variableList');
-  list.innerHTML = VARIABLE_ITEMS.map((v) => `
+  list.innerHTML = variableItems.map((v, pIdx) => `
     <div class="variable-item">
       <div class="variable-title">분석 대상: ${v.process}</div>
       <div class="variable-sub">공정 변수</div>
-      <div class="chip-row">${v.variables.map((name) => `<span class="chip">${name}</span>`).join('')}</div>
+      <div class="chip-row">
+        ${v.variables.map((name, vIdx) => `
+          <span class="chip chip-editable" data-p="${pIdx}" data-v="${vIdx}">
+            <span class="chip-text">${name}</span>
+            <button type="button" class="chip-remove" data-p="${pIdx}" data-v="${vIdx}">×</button>
+          </span>
+        `).join('')}
+        <span class="chip chip-add" data-p="${pIdx}">+ 변수 추가</span>
+      </div>
     </div>
   `).join('');
+
+  list.querySelectorAll('.chip-text').forEach((el) => {
+    el.addEventListener('click', () => startEditChip(el));
+  });
+  list.querySelectorAll('.chip-remove').forEach((btn) => {
+    btn.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const p = Number(btn.dataset.p);
+      const v = Number(btn.dataset.v);
+      variableItems[p].variables.splice(v, 1);
+      saveVariableItems();
+      renderVariableList();
+    });
+  });
+  list.querySelectorAll('.chip-add').forEach((el) => {
+    el.addEventListener('click', () => startAddChip(el));
+  });
+}
+
+function startEditChip(textEl) {
+  const chip = textEl.closest('.chip');
+  const p = Number(chip.dataset.p);
+  const v = Number(chip.dataset.v);
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'chip-input';
+  input.value = variableItems[p].variables[v];
+  chip.replaceChildren(input);
+  input.focus();
+  input.select();
+
+  input.addEventListener('blur', () => {
+    const value = input.value.trim();
+    if (value) variableItems[p].variables[v] = value;
+    saveVariableItems();
+    renderVariableList();
+  });
+  input.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') input.blur();
+  });
+}
+
+function startAddChip(addEl) {
+  const p = Number(addEl.dataset.p);
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'chip-input';
+  input.placeholder = '변수명';
+  addEl.replaceWith(input);
+  input.focus();
+
+  input.addEventListener('blur', () => {
+    const value = input.value.trim();
+    if (value) {
+      variableItems[p].variables.push(value);
+      saveVariableItems();
+    }
+    renderVariableList();
+  });
+  input.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') input.blur();
+  });
 }
 
 async function load() {
@@ -122,7 +210,6 @@ async function load() {
   document.getElementById('updatedAt').textContent = '마지막 업데이트: 방금 전';
   renderStats(events, scenarioStatus.current_time);
   renderAlerts(events);
-  renderVariableList();
 
   if (!selectedAnomalyId) {
     renderRecordDetailPlaceholder();
@@ -140,5 +227,6 @@ async function load() {
   renderRecordDetail(event, record);
 }
 
+renderVariableList();
 load();
 setInterval(load, 3000);
