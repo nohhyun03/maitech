@@ -23,7 +23,7 @@ renderAppShell({
     <div class="stat-grid">
       <div class="stat-card"><span class="badge">전체</span><div class="value" id="statTotal"></div></div>
       <div class="stat-card"><span class="badge">미확인</span><div class="value" id="statUnchecked"></div></div>
-      <div class="stat-card"><span class="badge">조치중</span><div class="value" id="statInProgress"></div></div>
+      <div class="stat-card"><span class="badge">조치완료</span><div class="value" id="statCompleted"></div></div>
       <div class="stat-card"><span class="badge">24h 감지</span><div class="value" id="stat24h"></div></div>
     </div>
 
@@ -35,20 +35,8 @@ renderAppShell({
       </div>
       <div class="right-col">
         <div class="panel">
-          <span class="panel-label">이상별 조치 기록 및 확인 상태</span>
-          <div class="record-table-scroll">
-            <table class="data-table" id="recordTable">
-              <thead>
-                <tr>
-                  <th>공정명</th>
-                  <th>이상유형</th>
-                  <th>조치 내용</th>
-                  <th>관리자 확인</th>
-                </tr>
-              </thead>
-              <tbody id="recordTableBody"></tbody>
-            </table>
-          </div>
+          <span class="panel-label">조치 기록 상세</span>
+          <div class="record-detail-scroll" id="recordDetail"></div>
         </div>
         <div class="panel">
           <span class="panel-label">변수 요소 관리</span>

@@ -63,6 +63,10 @@ function getActionRecords() {
   return apiGet('/api/action-records');
 }
 
+function getActionRecordFor(anomalyId) {
+  return apiGet(`/api/anomalies/${anomalyId}/action-record`);
+}
+
 function confirmActionRecord(id) {
   return apiPost(`/api/action-records/${id}/confirm`);
 }

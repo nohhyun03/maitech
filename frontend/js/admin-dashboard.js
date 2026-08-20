@@ -19,76 +19,91 @@ function statusClass(status) {
   return 'status-done';
 }
 
-function renderStats(events) {
+function renderStats(events, scenarioNow) {
   document.getElementById('statTotal').textContent = events.length;
   document.getElementById('statUnchecked').textContent = events.filter((e) => e.status === '미확인').length;
-  document.getElementById('statInProgress').textContent = events.filter((e) => e.status === '조치중').length;
+  document.getElementById('statCompleted').textContent = events.filter((e) => e.status === '조치완료' && !e.manager_confirmed).length;
 
-  const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+  const dayAgo = new Date(scenarioNow).getTime() - 24 * 60 * 60 * 1000;
   document.getElementById('stat24h').textContent = events.filter((e) => new Date(e.detected_at).getTime() >= dayAgo).length;
 }
 
+let selectedAnomalyId = null;
+
 function renderAlerts(events) {
   const list = document.getElementById('alertList');
-  list.innerHTML = events.map((e) => `
-    <div class="alert-card">
+  const sorted = [...events.filter((e) => !e.manager_confirmed), ...events.filter((e) => e.manager_confirmed)];
+
+  list.innerHTML = sorted.map((e) => `
+    <div class="alert-card ${e.id === selectedAnomalyId ? 'selected' : ''} ${e.manager_confirmed ? 'resolved' : ''}" data-id="${e.id}">
       <div>
-        <div class="alert-title">${e.severity_grade} ${e.process_name}</div>
+        <div class="alert-title">
+          <span class="severity-badge ${e.severity_grade === '긴급' ? 'urgent' : 'warning'}">${e.severity_grade}</span>
+          ${e.process_name}
+        </div>
         <div class="alert-meta">${e.variables.map((v) => v.variable_name).join(', ')} 이상 감지: ${formatDateTime(e.detected_at)}</div>
       </div>
-      <div class="status-text ${statusClass(e.status)}">${e.status}</div>
+      <div class="status-text ${statusClass(e.status)}">${e.manager_confirmed ? '관리자 확인 완료' : e.status}</div>
     </div>
-  `).join('') || '<p style="color:#999;">알림이 없습니다.</p>';
+  `).join('') || '<p style="color:#999; text-align:center;">알림이 없습니다.</p>';
+
+  list.querySelectorAll('.alert-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      selectedAnomalyId = selectedAnomalyId === card.dataset.id ? null : card.dataset.id;
+      load();
+    });
+  });
 }
 
-const expandedRecordIds = new Set();
+function renderRecordDetailPlaceholder() {
+  document.getElementById('recordDetail').innerHTML = '<p class="detail-placeholder">알림을 선택하세요.</p>';
+}
 
-function renderRecordTable(records) {
-  const body = document.getElementById('recordTableBody');
-  body.innerHTML = records.map((r) => {
-    const expanded = expandedRecordIds.has(String(r.id));
-    return `
-    <tr data-row-id="${r.id}">
-      <td>${r.process_name}</td>
-      <td>${r.issue_type}</td>
-      <td>
-        <div class="action-content-cell ${expanded ? 'expanded' : 'collapsed'}">
-          <strong>수행 조치</strong> ${r.action_content}
-          ${r.extra_notes ? `<div class="extra-notes"><strong>특이사항</strong> ${r.extra_notes}</div>` : ''}
-        </div>
-        <button type="button" class="expand-toggle" data-id="${r.id}">${expanded ? '접기' : '자세히 보기'}</button>
-      </td>
-      <td>
-        <input type="checkbox" class="confirm-checkbox" data-id="${r.id}">
-      </td>
-    </tr>
+function renderRecordDetail(event, record) {
+  const varRows = event.variables.map((v) => `
+    <div class="detail-variable-row">
+      <span class="badge">${v.variable_name}</span>
+      <span>${v.value}${v.unit ?? ''}</span>
+      <span class="status-text ${statusClass(v.grade === '긴급' ? '미확인' : v.grade === '경고' ? '조치중' : '조치완료')}">${v.grade}</span>
+    </div>
+  `).join('');
+
+  const actionSection = record
+    ? `
+      <div class="detail-action-content">
+        <strong>수행 조치</strong> ${record.action_content}
+        ${record.extra_notes ? `<div class="extra-notes"><strong>특이사항</strong> ${record.extra_notes}</div>` : ''}
+      </div>
+      <button type="button" class="detail-confirm-btn" id="detailConfirmBtn" ${record.manager_confirmed ? 'disabled' : ''}>
+        ${record.manager_confirmed ? '관리자 확인 완료' : '관리자 확인'}
+      </button>
+    `
+    : '<p class="detail-no-record">아직 조치 기록이 제출되지 않았습니다.</p>';
+
+  document.getElementById('recordDetail').innerHTML = `
+    <div class="detail-summary">
+      <div class="detail-summary-row"><span class="detail-label">심각도</span><span>${event.severity_grade}</span></div>
+      <div class="detail-summary-row"><span class="detail-label">공정명</span><span>${event.process_name}</span></div>
+      <div class="detail-summary-row"><span class="detail-label">감지 시각</span><span>${formatDateTime(event.detected_at)}</span></div>
+      <div class="detail-summary-row"><span class="detail-label">지속 시간</span><span>${formatDuration(event.duration_minutes)}</span></div>
+      <div class="detail-summary-row"><span class="detail-label">상태</span><span>${event.status}</span></div>
+    </div>
+    <div class="detail-variables">${varRows}</div>
+    <div class="detail-action-section">
+      <span class="panel-label">조치 기록</span>
+      ${actionSection}
+    </div>
   `;
-  }).join('') || '<tr><td colspan="4" style="color:#999;">확인 대기 중인 조치 기록이 없습니다.</td></tr>';
 
-  body.querySelectorAll('.expand-toggle').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const cell = btn.previousElementSibling;
-      const expanded = cell.classList.toggle('expanded');
-      cell.classList.toggle('collapsed', !expanded);
-      btn.textContent = expanded ? '접기' : '자세히 보기';
-      if (expanded) {
-        expandedRecordIds.add(btn.dataset.id);
-      } else {
-        expandedRecordIds.delete(btn.dataset.id);
-      }
+  const confirmBtn = document.getElementById('detailConfirmBtn');
+  if (confirmBtn && !record.manager_confirmed) {
+    confirmBtn.addEventListener('click', async () => {
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = '관리자 확인 완료';
+      await confirmActionRecord(record.id);
+      await load();
     });
-  });
-
-  body.querySelectorAll('.confirm-checkbox').forEach((box) => {
-    box.addEventListener('change', async () => {
-      box.disabled = true;
-      await confirmActionRecord(box.dataset.id);
-      body.querySelector(`tr[data-row-id="${box.dataset.id}"]`)?.remove();
-      if (!body.querySelector('tr')) {
-        body.innerHTML = '<tr><td colspan="4" style="color:#999;">확인 대기 중인 조치 기록이 없습니다.</td></tr>';
-      }
-    });
-  });
+  }
 }
 
 function renderVariableList() {
@@ -103,12 +118,26 @@ function renderVariableList() {
 }
 
 async function load() {
-  const [events, records] = await Promise.all([getAnomalies(), getActionRecords()]);
+  const [events, scenarioStatus] = await Promise.all([getAnomalies(), getScenarioStatus()]);
   document.getElementById('updatedAt').textContent = '마지막 업데이트: 방금 전';
-  renderStats(events);
+  renderStats(events, scenarioStatus.current_time);
   renderAlerts(events);
-  renderRecordTable(records);
   renderVariableList();
+
+  if (!selectedAnomalyId) {
+    renderRecordDetailPlaceholder();
+    return;
+  }
+
+  const event = events.find((e) => e.id === selectedAnomalyId);
+  if (!event) {
+    selectedAnomalyId = null;
+    renderRecordDetailPlaceholder();
+    return;
+  }
+
+  const record = await getActionRecordFor(selectedAnomalyId);
+  renderRecordDetail(event, record);
 }
 
 load();

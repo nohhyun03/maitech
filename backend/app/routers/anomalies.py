@@ -5,7 +5,7 @@ from ..action_record import start_action, submit_action_record
 from ..cause_analysis import analyze_causes, compute_variable_causes, direction_of
 from ..database import get_db
 from ..detection import run_detection
-from ..models import AnomalyEvent, VariableThreshold
+from ..models import ActionRecord, AnomalyEvent, VariableThreshold
 from ..quality_impact import predict_quality_impact
 from ..quality_prediction import predict_quality
 from ..recommended_action import recommend_actions
@@ -29,6 +29,18 @@ def _enrich_variable(v: dict, thresholds: dict) -> dict:
     }
 
 
+def _manager_confirmed(db: Session, event: AnomalyEvent):
+    if event.status != "조치완료":
+        return None
+    record = (
+        db.query(ActionRecord)
+        .filter(ActionRecord.anomaly_event_id == event.id)
+        .order_by(ActionRecord.recorded_at.desc())
+        .first()
+    )
+    return record.manager_confirmed if record else False
+
+
 @router.get("")
 def list_anomalies(db: Session = Depends(get_db)):
     run_detection(db)
@@ -44,6 +56,7 @@ def list_anomalies(db: Session = Depends(get_db)):
             "severity_grade": e.severity_grade,
             "anomaly_score": e.anomaly_score,
             "status": e.status,
+            "manager_confirmed": _manager_confirmed(db, e),
             "variables": [_enrich_variable(v, thresholds) for v in e.variables],
         }
         for e in events
@@ -134,6 +147,26 @@ def get_recommended_actions(anomaly_event_id: str, db: Session = Depends(get_db)
         }
         for r in results
     ]
+
+
+@router.get("/{anomaly_event_id}/action-record")
+def get_action_record(anomaly_event_id: str, db: Session = Depends(get_db)):
+    record = (
+        db.query(ActionRecord)
+        .filter(ActionRecord.anomaly_event_id == anomaly_event_id)
+        .order_by(ActionRecord.recorded_at.desc())
+        .first()
+    )
+    if record is None:
+        return None
+    return {
+        "id": record.id,
+        "anomaly_event_id": record.anomaly_event_id,
+        "action_content": record.action_content,
+        "extra_notes": record.extra_notes,
+        "manager_confirmed": record.manager_confirmed,
+        "recorded_at": record.recorded_at.isoformat(),
+    }
 
 
 @router.post("/{anomaly_event_id}/action-records")
