@@ -32,15 +32,14 @@ def _open_event(db: Session, scenario_id: int, process_name: str):
     )
 
 
-def _already_completed(db: Session, scenario_id: int, process_name: str, timestamp) -> bool:
+def _process_already_resolved(db: Session, scenario_id: int, process_name: str, as_of) -> bool:
     return (
         db.query(AnomalyEvent)
         .filter(
             AnomalyEvent.scenario_id == scenario_id,
             AnomalyEvent.process_name == process_name,
             AnomalyEvent.status == "조치완료",
-            AnomalyEvent.detected_at <= timestamp,
-            AnomalyEvent.last_updated_at >= timestamp,
+            AnomalyEvent.detected_at <= as_of,
         )
         .first()
         is not None
@@ -90,7 +89,12 @@ def run_detection(db: Session):
             _candidate_onset.pop(candidate_key, None)
             continue
 
+        if _process_already_resolved(db, scenario_id, row.process_name, row.timestamp):
+            _candidate_onset.pop(candidate_key, None)
+            continue
+
         event = _open_event(db, scenario_id, row.process_name)
+
         if event is None:
             onset = _candidate_onset.get(candidate_key)
             if onset is None:
@@ -100,8 +104,6 @@ def run_detection(db: Session):
                 continue
             _candidate_onset.pop(candidate_key, None)
 
-            if _already_completed(db, scenario_id, row.process_name, onset):
-                continue
             event = AnomalyEvent(
                 id=uuid.uuid4().hex,
                 scenario_id=scenario_id,
@@ -116,22 +118,23 @@ def run_detection(db: Session):
             )
             db.add(event)
             db.flush()
-        else:
-            _candidate_onset.pop(candidate_key, None)
-            variables = copy.deepcopy(event.variables)
-            for v in variables:
-                if v["variable_name"] == row.variable_name:
-                    v["value"] = row.value
-                    v["score"] = score
-                    break
-            else:
-                variables.append({"variable_name": row.variable_name, "value": row.value, "score": score})
+            continue
 
-            event.variables = variables
-            event.anomaly_score = max(event.anomaly_score, score)
-            event.severity_grade = grade_from_score(event.anomaly_score)
-            event.last_updated_at = row.timestamp
-            event.duration_minutes = (row.timestamp - event.detected_at).total_seconds() / 60
+        _candidate_onset.pop(candidate_key, None)
+        variables = copy.deepcopy(event.variables)
+        for v in variables:
+            if v["variable_name"] == row.variable_name:
+                v["value"] = row.value
+                v["score"] = score
+                break
+        else:
+            variables.append({"variable_name": row.variable_name, "value": row.value, "score": score})
+
+        event.variables = variables
+        event.anomaly_score = max(event.anomaly_score, score)
+        event.severity_grade = grade_from_score(event.anomaly_score)
+        event.last_updated_at = row.timestamp
+        event.duration_minutes = (row.timestamp - event.detected_at).total_seconds() / 60
 
     _last_processed[scenario_id] = rows[-1].timestamp
     db.commit()
