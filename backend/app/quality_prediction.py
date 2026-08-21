@@ -2,8 +2,8 @@ from sqlalchemy.orm import Session
 
 from .models import AnomalyEvent, QualityPrediction
 
-SCORE_WEIGHT = 6
-DURATION_WEIGHT = 1.5
+SCORE_WEIGHT = 1.5
+DURATION_WEIGHT = 0.3
 
 
 def _total_score(event: AnomalyEvent, exclude_variable: str = None) -> float:
@@ -22,9 +22,9 @@ def defect_probability_excluding(event: AnomalyEvent, variable_name: str) -> flo
 
 
 def _impact_label(defect_probability: float) -> str:
-    if defect_probability >= 50:
+    if defect_probability >= 5:
         return "불량 위험 높음"
-    if defect_probability >= 20:
+    if defect_probability >= 1:
         return "품질 저하 우려"
     return "정상 품질 유지 예상"
 
