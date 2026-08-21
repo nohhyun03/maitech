@@ -75,14 +75,14 @@
 #causeTable th:nth-child(2),
 #causeTable td:nth-child(2),
 #causeTable th:nth-child(3),
-#causeTable td:nth-child(3),
-#causeTable th:nth-child(4),
-#causeTable td:nth-child(4) {
+#causeTable td:nth-child(3) {
   width: 15%;
 }
 
+#causeTable th:nth-child(4),
+#causeTable td:nth-child(4),
 #causeTable th:nth-child(5),
 #causeTable td:nth-child(5) {
-  width: 29%;
+  width: 22%;
 }
 
