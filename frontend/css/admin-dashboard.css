@@ -16,6 +16,25 @@
   border-radius: 10px;
 }
 
+#statGrid .stat-card {
+  position: relative;
+  padding-top: 18px;
+  padding-left: 18px;
+}
+
+#statGrid .stat-card .badge {
+  font-size: 14px;
+  padding: 6px 12px;
+}
+
+#statGrid .stat-card .value {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 48px;
+}
+
 #mainContent .two-col {
   grid-template-columns: 1fr 1fr;
   gap: 35px;
