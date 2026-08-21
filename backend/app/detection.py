@@ -8,15 +8,10 @@ from .models import AnomalyEvent, ProcessData, VariableThreshold
 from .rules import compute_score, grade_from_score
 
 _last_processed = {}
-_candidate_onset = {}
-
-DEBOUNCE_SECONDS = 60
 
 
 def reset_watermark(scenario_id: int):
     _last_processed.pop(scenario_id, None)
-    for key in [k for k in _candidate_onset if k[0] == scenario_id]:
-        _candidate_onset.pop(key, None)
 
 
 def _open_event(db: Session, scenario_id: int, process_name: str):
@@ -84,33 +79,22 @@ def run_detection(db: Session):
             threshold.critical_lower_enabled,
             threshold.critical_upper_enabled,
         )
-        candidate_key = (scenario_id, row.process_name, row.variable_name)
         if score <= 0:
-            _candidate_onset.pop(candidate_key, None)
             continue
 
         if _process_already_resolved(db, scenario_id, row.process_name, row.timestamp):
-            _candidate_onset.pop(candidate_key, None)
             continue
 
         event = _open_event(db, scenario_id, row.process_name)
 
         if event is None:
-            onset = _candidate_onset.get(candidate_key)
-            if onset is None:
-                _candidate_onset[candidate_key] = row.timestamp
-                continue
-            if (row.timestamp - onset).total_seconds() < DEBOUNCE_SECONDS:
-                continue
-            _candidate_onset.pop(candidate_key, None)
-
             event = AnomalyEvent(
                 id=uuid.uuid4().hex,
                 scenario_id=scenario_id,
                 process_name=row.process_name,
-                detected_at=onset,
+                detected_at=row.timestamp,
                 last_updated_at=row.timestamp,
-                duration_minutes=(row.timestamp - onset).total_seconds() / 60,
+                duration_minutes=0,
                 severity_grade=grade_from_score(score),
                 anomaly_score=score,
                 status="미확인",
@@ -120,7 +104,6 @@ def run_detection(db: Session):
             db.flush()
             continue
 
-        _candidate_onset.pop(candidate_key, None)
         variables = copy.deepcopy(event.variables)
         for v in variables:
             if v["variable_name"] == row.variable_name:
