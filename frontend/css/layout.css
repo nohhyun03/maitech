@@ -20,6 +20,9 @@
   width: 300px;
   padding-left: 14px;
   flex-shrink: 0;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
 }
 
 .app-header .brand img {

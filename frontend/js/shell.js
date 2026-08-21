@@ -79,10 +79,10 @@ function renderAppShell({ active, role, mainHtml }) {
   document.body.innerHTML = `
     <div class="app-shell">
       <header class="app-header">
-        <div class="brand">
+        <a class="brand" href="dashboard-status.html">
           <img src="../images/logo.png" alt="MAITECH 로고">
           <span>MAITECH</span>
-        </div>
+        </a>
         <div class="page-title">${ROLE_LABEL[role] || ''}</div>
         <div class="header-actions">
           <div class="search-box">

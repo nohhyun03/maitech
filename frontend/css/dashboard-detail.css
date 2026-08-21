@@ -45,6 +45,10 @@
   padding: 12px 24px;
 }
 
+#metricGrid .stat-card .value {
+  font-size: 29px;
+}
+
 .two-col {
   grid-template-columns: 1fr 1fr;
   gap: 35px;
