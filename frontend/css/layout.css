@@ -181,15 +181,29 @@
   margin-top: 25px;
 }
 
-.nav-item img {
-  width: 30px;
-  height: 30px;
-}
-
 .nav-item.active {
   background: rgba(31, 63, 195, 0.05);
   color: #1f3fc3;
   border-left-color: #1f3fc3;
+}
+
+.nav-item + .nav-item.nav-sub {
+  margin-top: 8px;
+}
+
+.nav-item.nav-sub {
+  padding-left: 44px;
+  font-size: 15px;
+}
+
+span.nav-item.nav-sub {
+  cursor: default;
+}
+
+.nav-item.nav-sub::before {
+  content: '└';
+  margin-right: 2px;
+  color: #999;
 }
 
 .main-content {

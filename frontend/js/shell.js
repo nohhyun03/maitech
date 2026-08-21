@@ -1,11 +1,67 @@
-function getNavItems(role) {
+const CLOCK_ICON_SVG = `
+  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
+    <path d="M12 7v5l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+`;
+
+const BELL_ICON_SVG = `
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 10a6 6 0 1 1 12 0c0 3.2 1 4.8 2 6H4c1-1.2 2-2.8 2-6Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M10 19a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+  </svg>
+`;
+
+const GEAR_ICON_SVG = `
+  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/>
+    <path d="M12 3v2.5M12 18.5V21M21 12h-2.5M5.5 12H3M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8M18.5 18.5l-1.8-1.8M7.3 7.3 5.5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+  </svg>
+`;
+
+const SIMULATION_ICON_SVG = `
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2L4 5V11C4 16.55 7.84 21.74 12 23C16.16 21.74 20 16.55 20 11V5L12 2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M8.5 12.2L11 14.7L15.8 9.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+`;
+
+const ACTION_RECORD_ICON_SVG = `
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8l-5-5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M14 3v5h5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M9 14h6M9 17h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>
+`;
+
+const DRILLDOWN_CHAIN = [
+  { key: 'detail', label: '공정 이상 상세', iconSvg: BELL_ICON_SVG, page: 'dashboard-detail' },
+  { key: 'simulation', label: '시뮬레이션 진행', iconSvg: SIMULATION_ICON_SVG, page: 'dashboard-simulation' },
+  { key: 'action-record', label: '조치 기록 작성', iconSvg: ACTION_RECORD_ICON_SVG, page: 'action-record' },
+];
+
+function getNavItems(role, active) {
   const items = [
-    { key: 'status', label: '실시간 공정 상태 현황', icon: 'icon-clock.png', href: 'dashboard-status.html' },
-    { key: 'detail', label: '공정 이상 상세', icon: 'icon-bell.png', href: '#' },
+    { key: 'status', label: '실시간 공정 상태 현황', iconSvg: CLOCK_ICON_SVG, href: 'dashboard-status.html' },
   ];
 
+  const activeIndex = DRILLDOWN_CHAIN.findIndex((item) => item.key === active);
+  if (activeIndex !== -1) {
+    DRILLDOWN_CHAIN.slice(0, activeIndex + 1).forEach((item, i) => {
+      const isCurrent = i === activeIndex;
+      items.push({
+        key: item.key,
+        label: item.label,
+        iconSvg: item.iconSvg,
+        subLevel: true,
+        nonNavigable: isCurrent,
+        href: isCurrent ? undefined : `${item.page}${window.location.search}`,
+      });
+    });
+  }
+
   if (role === 'manager') {
-    items.push({ key: 'admin', label: '관리자 현황 확인', icon: 'icon-settings.png', href: 'admin-dashboard.html' });
+    items.push({ key: 'admin', label: '관리자 현황 확인', iconSvg: GEAR_ICON_SVG, href: 'admin-dashboard.html' });
   }
 
   return items;
@@ -69,12 +125,16 @@ function renderScenarioControl(status) {
 }
 
 function renderAppShell({ active, role, mainHtml }) {
-  const navHtml = getNavItems(role).map((item) => `
-    <a class="nav-item${item.key === active ? ' active' : ''}" href="${item.href}">
-      <img src="../images/${item.icon}" alt="">
+  const navHtml = getNavItems(role, active).map((item) => {
+    const classes = `nav-item${item.key === active ? ' active' : ''}${item.subLevel ? ' nav-sub' : ''}`;
+    const inner = `
+      ${item.iconSvg}
       ${item.label}
-    </a>
-  `).join('');
+    `;
+    return item.nonNavigable
+      ? `<span class="${classes}">${inner}</span>`
+      : `<a class="${classes}" href="${item.href}">${inner}</a>`;
+  }).join('');
 
   document.body.innerHTML = `
     <div class="app-shell">
