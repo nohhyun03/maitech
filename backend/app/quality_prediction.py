@@ -24,9 +24,7 @@ def defect_probability_excluding(event: AnomalyEvent, variable_name: str) -> flo
 def _impact_label(defect_probability: float) -> str:
     if defect_probability >= 5:
         return "불량 위험 높음"
-    if defect_probability >= 1:
-        return "품질 저하 우려"
-    return "정상 품질 유지 예상"
+    return "품질 저하 우려"
 
 
 def _describe(impact_label: str, defect_probability: float, duration_minutes: float) -> str:

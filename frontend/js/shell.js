@@ -114,7 +114,8 @@ function renderScenarioControl(status) {
   });
   document.getElementById('scenarioRestartBtn').addEventListener('click', async () => {
     localStorage.removeItem('maitech_variable_items');
-    renderScenarioControl(await restartScenario());
+    await restartScenario();
+    window.location.href = 'dashboard-status.html';
   });
 
   if (scenarioPollTimer === null) {
