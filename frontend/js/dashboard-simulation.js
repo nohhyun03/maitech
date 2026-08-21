@@ -78,12 +78,8 @@ async function load() {
   renderActionsLoading();
   renderImpactLoading();
 
-  const [prediction, actions] = await Promise.all([
-    getQualityPrediction(anomalyId),
-    getRecommendedActions(anomalyId),
-  ]);
+  const actions = await getRecommendedActions(anomalyId);
 
-  document.getElementById('confidenceLine').textContent = `예측 신뢰도: ${prediction.confidence_pct.toFixed(1)}%`;
   renderSimTable(actions);
   renderActions(actions);
 

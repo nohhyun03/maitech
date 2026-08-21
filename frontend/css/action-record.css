@@ -11,7 +11,7 @@
 }
 
 .section-title {
-  margin: 20px 0 15px;
+  margin: 36px 0 15px;
 }
 
 .main-content .panel {
@@ -41,12 +41,6 @@
   font-weight: 600;
 }
 
-.form-label {
-  font-size: 15px;
-  color: #333;
-  margin-bottom: 7px;
-}
-
 .form-textarea {
   width: 100%;
   min-height: 100px;
@@ -73,6 +67,12 @@
   grid-template-columns: 1fr 1fr;
   gap: 24px;
   margin-bottom: 20px;
+}
+
+.signature-field-label {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 6px;
 }
 
 .form-select {

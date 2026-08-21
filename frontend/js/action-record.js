@@ -67,10 +67,10 @@ async function load() {
     : '-';
   document.getElementById('infoStatus').textContent = event.status;
 
-  const receiverLabel = currentUser.role === 'manager' ? '생산 관리자' : '현장 작업자';
+  const senderLabel = currentUser.role === 'manager' ? '생산 관리자' : '현장 작업자';
 
-  document.getElementById('senderOption').textContent = '생산 관리자 강성윤';
-  document.getElementById('receiverOption').textContent = `${receiverLabel} ${currentUser.name}`;
+  document.getElementById('senderOption').textContent = `${senderLabel} ${currentUser.name}`;
+  document.getElementById('receiverOption').textContent = '생산 관리자 강성윤';
 
   document.getElementById('previewText').textContent =
     `[${event.id}] ${event.process_name} 이상 대응 조치 기록이 등록되었습니다. 조치 내용과 결과가 포함되며, 관리자는 이상 상세 화면에서 전체 기록을 확인할 수 있습니다.`;
