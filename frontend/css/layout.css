@@ -480,18 +480,19 @@
 }
 
 .icon-badge {
-  width: 55px;
-  height: 55px;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   border-radius: 10px;
   background: #434343;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 16px 20px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
-.icon-badge img {
-  width: 24px;
-  height: 24px;
-  filter: brightness(0) invert(1);
+.icon-badge svg {
+  flex-shrink: 0;
 }
