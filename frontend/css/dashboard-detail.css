@@ -19,7 +19,7 @@
 
 .stat-card-compact {
   min-height: 100px;
-  padding: 12px 24px;
+  padding: 20px;
 }
 
 .stat-card-compact .value {
@@ -42,7 +42,7 @@
 }
 
 #metricGrid .stat-card {
-  padding: 12px 24px;
+  padding: 20px;
 }
 
 #metricGrid .stat-card .value {

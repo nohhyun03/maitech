@@ -15,7 +15,7 @@
 }
 
 .main-content .panel {
-  padding: 13px 24px 14px;
+  padding: 20px;
 }
 
 .main-content .panel-label {
@@ -114,7 +114,7 @@
 .consent-row input[type="checkbox"] {
   width: 20px;
   height: 20px;
-  border-radius: 3px;
+  border-radius: 6px;
   accent-color: var(--color-checkbox);
 }
 
