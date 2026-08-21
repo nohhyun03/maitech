@@ -78,7 +78,7 @@ function renderRecordDetailPlaceholder() {
 }
 
 function renderRecordDetail(event, record) {
-  const varRows = event.variables.map((v) => `
+  const varRows = [...event.variables].sort((a, b) => b.score - a.score).map((v) => `
     <div class="detail-variable-row">
       <span class="badge">${v.variable_name}</span>
       <span>${v.value}${v.unit ?? ''}</span>
