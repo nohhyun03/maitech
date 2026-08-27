@@ -45,7 +45,6 @@ if not db.query(User).filter(User.username == "manager1").first():
         )
     )
 
-# (변수명, golden_lower, golden_upper, lower_bound, upper_bound, critical_lower_enabled, critical_upper_enabled, 단위)
 THRESHOLDS = [
     ("금형 온도", 173.0, 177.0, 170.0, 179.0, True, True, "℃"),
     ("사출 압력", 6.7, 7.1, 6.4, 7.4, True, True, "MPa"),
@@ -53,10 +52,8 @@ THRESHOLDS = [
     ("수지 점도 (모터 부하)", 95.0, 105.0, 90.0, 110.0, True, True, "%"),
     ("유량 (RAM 속도)", 2.8, 3.2, 2.6, 3.4, True, True, "mm/sec"),
     ("몰딩 시간", 118.0, 122.0, 115.0, 125.0, True, True, "sec"),
-    # 냉각 속도: 하한 쪽 Critical 기준을 기획팀에 재확인 중 — 확정 전까지 상한 span(6.5)을 그대로 미러링해 임시 하한(1.0)을 둔다.
     ("냉각 속도", 7.5, 8.5, 1.0, 15.0, False, True, "℃/min"),
     ("작업장 습도", 40.0, 50.0, 30.0, 55.0, True, True, "% RH"),
-    # 진공 시간: 상한 쪽 Critical 기준을 기획팀에 재확인 중 — 확정 전까지 하한 span(1.0)을 그대로 미러링해 임시 상한(5.5)을 둔다.
     ("진공 시간", 3.5, 4.5, 2.5, 5.5, True, False, "sec"),
 ]
 
